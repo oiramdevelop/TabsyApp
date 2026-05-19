@@ -1,0 +1,187 @@
+// ============================================================
+//  admin.js — Panel del SuperAdmin: bares, usuarios, reservas
+// ============================================================
+
+import { auth }   from '../core/auth.js';
+import { api }    from '../core/api.js';
+import { toast }  from '../components/toast.js';
+import { loader } from '../components/loader.js';
+import { modal }  from '../components/modal.js';
+import { renderNavbar } from '../components/navbar.js';
+
+if (!auth.requireSuperAdmin()) throw new Error('No autorizado');
+
+renderNavbar();
+
+// ─── BARES ────────────────────────────────────────────────────
+export async function cargarBares() {
+    loader.show();
+    try {
+        const bares = await api.bares.getAll();
+        renderBares(bares);
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        loader.hide();
+    }
+}
+
+function renderBares(bares) {
+    const container = document.getElementById('lista-bares');
+    if (!container) return;
+
+    container.innerHTML = bares.map(b => `
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex justify-between items-start">
+            <div>
+                <h3 class="font-bold text-gray-800">${b.nombre}</h3>
+                <p class="text-sm text-gray-500">${b.direccion}, ${b.ciudad}</p>
+                <p class="text-xs text-gray-400 mt-1">${b.horario_apertura ?? ''} – ${b.horario_cierre ?? ''}</p>
+            </div>
+            <div class="flex gap-2">
+                <button data-id="${b.id}" class="btn-edit-bar text-xs px-3 py-1 rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50 transition">
+                    Editar
+                </button>
+                <button data-id="${b.id}" class="btn-del-bar text-xs px-3 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition">
+                    Borrar
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('.btn-del-bar').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const ok = await modal.confirm('¿Borrar bar?', 'Se eliminarán todas sus mesas y reservas.');
+            if (!ok) return;
+            await api.bares.delete(btn.dataset.id);
+            toast('Bar eliminado', 'info');
+            cargarBares();
+        });
+    });
+}
+
+document.getElementById('form-bar')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        nombre:           document.getElementById('bar-nombre').value,
+        direccion:        document.getElementById('bar-direccion').value,
+        ciudad:           document.getElementById('bar-ciudad').value,
+        telefono:         document.getElementById('bar-telefono')?.value,
+        descripcion:      document.getElementById('bar-descripcion')?.value,
+        horario_apertura: document.getElementById('bar-apertura')?.value,
+        horario_cierre:   document.getElementById('bar-cierre')?.value,
+        google_place_id:  document.getElementById('bar-place-id')?.value || null,
+    };
+    loader.show();
+    try {
+        await api.bares.create(data);
+        toast('Bar creado correctamente', 'success');
+        e.target.reset();
+        const pp = document.getElementById('place-preview');
+        if (pp) pp.style.display = 'none';
+        cargarBares();
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        loader.hide();
+    }
+});
+
+// ─── USUARIOS ─────────────────────────────────────────────────
+export async function cargarUsuarios() {
+    loader.show();
+    try {
+        const usuarios = await api.usuarios.getAll();
+        renderUsuarios(usuarios);
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        loader.hide();
+    }
+}
+
+function renderUsuarios(usuarios) {
+    const container = document.getElementById('lista-usuarios');
+    if (!container) return;
+
+    const roleColor = {
+        superadmin: 'bg-purple-100 text-purple-700',
+        bar_admin:  'bg-blue-100 text-blue-700',
+        cliente:    'bg-gray-100 text-gray-600',
+    };
+
+    container.innerHTML = usuarios.map(u => `
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex justify-between items-center">
+            <div>
+                <p class="font-semibold text-gray-800">${u.name}</p>
+                <p class="text-sm text-gray-500">${u.email}</p>
+                ${u.bar ? `<p class="text-xs text-gray-400">${u.bar.nombre}</p>` : ''}
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold px-3 py-1 rounded-full ${roleColor[u.role]}">${u.role}</span>
+                <button data-id="${u.id}" class="btn-del-user text-xs text-red-500 hover:underline">
+                    Borrar
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('.btn-del-user').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const ok = await modal.confirm('¿Borrar usuario?', 'Esta acción es irreversible.');
+            if (!ok) return;
+            await api.usuarios.delete(btn.dataset.id);
+            toast('Usuario eliminado', 'info');
+            cargarUsuarios();
+        });
+    });
+}
+
+document.getElementById('form-usuario')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        name:     document.getElementById('user-name').value,
+        email:    document.getElementById('user-email').value,
+        password: document.getElementById('user-password').value,
+        role:     document.getElementById('user-role').value,
+        bar_id:   document.getElementById('user-bar')?.value || null,
+    };
+    loader.show();
+    try {
+        await api.usuarios.create(data);
+        toast('Usuario creado', 'success');
+        e.target.reset();
+        cargarUsuarios();
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        loader.hide();
+    }
+});
+
+// ─── RESERVAS GLOBALES ────────────────────────────────────────
+export async function cargarTodasReservas() {
+    loader.show();
+    try {
+        const reservas = await api.reservas.todas();
+        const container = document.getElementById('todas-reservas');
+        if (!container) return;
+        container.innerHTML = reservas.map(r => `
+            <div class="bg-white rounded-xl border border-gray-100 p-4 text-sm">
+                <span class="font-semibold">${r.user?.name}</span> →
+                <span>${r.bar?.nombre}</span> ·
+                <span>${r.mesa?.numero}</span> ·
+                <span>${r.fecha} ${r.hora}</span> ·
+                <span class="font-medium text-amber-600">${r.estado}</span>
+            </div>
+        `).join('');
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        loader.hide();
+    }
+}
+
+// ─── INIT (llama solo lo que exista en la página actual) ──────
+if (document.getElementById('lista-bares'))    cargarBares();
+if (document.getElementById('lista-usuarios')) cargarUsuarios();
+if (document.getElementById('todas-reservas')) cargarTodasReservas();

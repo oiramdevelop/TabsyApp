@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tabsy — Mi Bar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --navy:#0f2240; --blue:#1a3a6b; --steel:#4a6fa5; --sand:#c9a96e; --cream:#f5f0e8; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',sans-serif; background:#f8f9fc; color:var(--navy); min-height:100vh; display:flex; }
+    h1,h2,h3 { font-family:'Playfair Display',serif; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+    .fade-up { animation:fadeUp 0.5s ease both; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { width:260px; flex-shrink:0; background:var(--navy); min-height:100vh; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:11px 20px; border-radius:10px; margin:2px 12px; color:rgba(255,255,255,0.55); font-size:0.9rem; font-weight:500; text-decoration:none; transition:all 0.2s; cursor:pointer; border:none; background:transparent; width:calc(100% - 24px); text-align:left; position:relative; }
+    .sidebar-link:hover { background:rgba(255,255,255,0.08); color:white; }
+    .sidebar-link.active { background:rgba(201,169,110,0.2); color:var(--sand); }
+    .sidebar-section { padding:16px 20px 6px; font-size:0.68rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.25); }
+    .notif-badge { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:#ef4444; color:white; font-size:0.62rem; font-weight:800; min-width:18px; height:18px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+
+    .main { flex:1; overflow-y:auto; }
+    .panel { display:none; }
+    .panel.active { display:block; }
+
+    /* ── STAT CARDS ── */
+    .stat-card { background:white; border-radius:18px; padding:24px; border:1px solid rgba(15,34,64,0.06); transition:box-shadow 0.2s; }
+    .stat-card:hover { box-shadow:0 4px 20px rgba(15,34,64,0.08); }
+    .stat-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+
+    /* ── TABLE ── */
+    table { width:100%; border-collapse:collapse; }
+    thead th { text-align:left; padding:10px 14px; font-size:0.75rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(15,34,64,0.4); border-bottom:1px solid rgba(15,34,64,0.08); }
+    tbody tr { border-bottom:1px solid rgba(15,34,64,0.05); transition:background 0.15s; }
+    tbody tr:hover { background:rgba(15,34,64,0.02); }
+    tbody td { padding:12px 14px; font-size:0.88rem; vertical-align:middle; }
+
+    /* ── BADGES ── */
+    .badge { font-size:0.68rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:3px 10px; border-radius:999px; }
+    .badge-pendiente  { background:#fef3c7; color:#92400e; }
+    .badge-confirmada { background:#d1fae5; color:#065f46; }
+    .badge-cancelada  { background:#f3f4f6; color:#6b7280; }
+    .badge-rechazada  { background:#fee2e2; color:#991b1b; }
+
+    /* ── FORM ── */
+    .form-input { width:100%; background:#f8f9fc; border:1.5px solid rgba(15,34,64,0.1); border-radius:10px; padding:10px 14px; font-family:'Inter',sans-serif; font-size:0.88rem; color:var(--navy); transition:all 0.2s; }
+    .form-input:focus { outline:none; border-color:var(--steel); background:white; }
+    .form-input::placeholder { color:rgba(15,34,64,0.3); }
+    label { display:block; font-size:0.75rem; font-weight:600; color:var(--navy); opacity:0.5; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:4px; }
+    .btn-primary { background:var(--navy); color:white; border:none; border-radius:10px; padding:10px 20px; font-family:'Inter',sans-serif; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .btn-primary:hover { background:var(--blue); }
+    .btn-confirm { background:#d1fae5; color:#065f46; border:none; border-radius:8px; padding:5px 12px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.15s; }
+    .btn-confirm:hover { background:#a7f3d0; }
+    .btn-reject  { background:#fee2e2; color:#991b1b; border:none; border-radius:8px; padding:5px 12px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.15s; }
+    .btn-reject:hover { background:#fecaca; }
+
+    /* ── MINI CHART ── */
+    .chart-bar-wrap { display:flex; align-items:flex-end; gap:3px; height:60px; }
+    .chart-bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; height:100%; justify-content:flex-end; }
+    .chart-bar-fill { width:100%; border-radius:3px 3px 0 0; transition:height 0.5s ease; min-height:2px; }
+    .chart-bar-label { font-size:0.6rem; color:rgba(15,34,64,0.35); }
+
+    /* ── MESA CARD ── */
+    .mesa-card { background:white; border-radius:14px; border:1px solid rgba(15,34,64,0.07); padding:16px 18px; display:flex; justify-content:space-between; align-items:center; transition:box-shadow 0.15s; }
+    .mesa-card:hover { box-shadow:0 4px 16px rgba(15,34,64,0.08); }
+    .mesa-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="p-6 mb-2">
+    <div class="flex items-center mb-1">
+      <img src="/assets/images/logo2-2.png" alt="Tabsy" style="height:80px;width:auto;" />
+    </div>
+    <span class="text-xs mt-2 block font-semibold" style="color:rgba(201,169,110,0.7);letter-spacing:0.06em;text-transform:uppercase;">Admin Bar</span>
+    <span id="bar-nombre-sidebar" class="text-sm font-semibold block mt-1" style="color:white;">Cargando...</span>
+  </div>
+
+  <div class="sidebar-section">General</div>
+  <button class="sidebar-link active" onclick="showPanel('dashboard')" id="nav-dashboard">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+    Dashboard
+  </button>
+
+  <div class="sidebar-section">Gestión</div>
+  <button class="sidebar-link" onclick="showPanel('reservas')" id="nav-reservas">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+    Reservas
+    <span id="badge-reservas" class="notif-badge" style="display:none;"></span>
+  </button>
+  <button class="sidebar-link" onclick="showPanel('mesas')" id="nav-mesas">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>
+    Mesas
+  </button>
+  <button class="sidebar-link" onclick="showPanel('mi-bar')" id="nav-mi-bar">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+    Mi Bar
+  </button>
+
+  <div class="mt-auto p-6">
+    <div id="user-info" class="text-xs mb-3" style="color:rgba(255,255,255,0.3);"></div>
+    <button id="btn-logout" class="text-sm text-red-400 hover:text-red-300 transition text-left">→ Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main p-8">
+
+  <!-- ── DASHBOARD ── -->
+  <div id="panel-dashboard" class="panel active fade-up">
+    <div class="mb-8 flex items-start justify-between">
+      <div>
+        <h1 class="text-3xl font-black mb-1" id="saludo">Bienvenido</h1>
+        <p class="text-gray-400 text-sm">Panel de control de tu bar</p>
+      </div>
+      <div id="notif-nueva" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:10px 16px;font-size:0.82rem;font-weight:600;color:#92400e;display:none;align-items:center;gap:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="notif-texto">Nueva reserva pendiente</span>
+      </div>
+    </div>
+
+    <!-- Stats principales -->
+    <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+      <div class="stat-card" style="border-left:4px solid var(--steel);">
+        <div class="stat-icon" style="background:rgba(74,111,165,0.12);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a6fa5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+        <p class="text-3xl font-black mb-1" id="stat-total">—</p>
+        <p class="text-sm text-gray-400">Total reservas</p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #f59e0b;">
+        <div class="stat-icon" style="background:#fef3c7;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <p class="text-3xl font-black mb-1" id="stat-pendientes" style="color:#92400e;">—</p>
+        <p class="text-sm text-gray-400">Pendientes</p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #10b981;">
+        <div class="stat-icon" style="background:#d1fae5;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <p class="text-3xl font-black mb-1" id="stat-confirmadas" style="color:#065f46;">—</p>
+        <p class="text-sm text-gray-400">Confirmadas</p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #ef4444;">
+        <div class="stat-icon" style="background:#fee2e2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <p class="text-3xl font-black mb-1" id="stat-canceladas" style="color:#991b1b;">—</p>
+        <p class="text-sm text-gray-400">Canceladas</p>
+      </div>
+      <div class="stat-card" style="background:var(--navy);border-left:4px solid var(--sand);">
+        <div class="stat-icon" style="background:rgba(255,255,255,0.1);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <p class="text-3xl font-black mb-1 text-white" id="stat-clientes">—</p>
+        <p class="text-sm" style="color:rgba(255,255,255,0.5);">Clientes únicos</p>
+      </div>
+    </div>
+
+    <!-- Distribución + próximas -->
+    <div class="grid lg:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold mb-5">Distribución de reservas</h3>
+        <div class="flex flex-col gap-4" id="chart-estados"></div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold mb-5">Próximas confirmadas</h3>
+        <div id="proximas-reservas" class="flex flex-col gap-3 text-sm"></div>
+      </div>
+    </div>
+
+    <!-- Pendientes de acción -->
+    <h2 class="text-xl font-bold mb-4">Pendientes de respuesta</h2>
+    <div class="bg-white rounded-2xl border border-black/5 overflow-hidden">
+      <div id="pendientes-lista">
+        <div class="p-8 text-center text-gray-400 text-sm">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESERVAS ── -->
+  <div id="panel-reservas" class="panel fade-up">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-black">Reservas</h1>
+      <select id="filtro-estado" class="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white" onchange="filtrarReservas()">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="confirmada">Confirmada</option>
+        <option value="cancelada">Cancelada</option>
+        <option value="rechazada">Rechazada</option>
+      </select>
+    </div>
+
+    <!-- Estadísticas del mes (Python) -->
+    <div id="stats-mes-wrap" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-2xl p-5 border border-black/5">
+        <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1" id="stats-mes-label">Este mes</p>
+        <p class="text-3xl font-black" id="stats-mes-total">—</p>
+        <p class="text-xs text-gray-400 mt-1" id="stats-mes-var"></p>
+      </div>
+      <div class="bg-white rounded-2xl p-5 border border-black/5">
+        <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Tasa confirmación</p>
+        <p class="text-3xl font-black" style="color:#065f46;" id="stats-mes-tasa">—</p>
+        <p class="text-xs text-gray-400 mt-1">del total del mes</p>
+      </div>
+      <div class="bg-white rounded-2xl p-5 border border-black/5">
+        <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Personas esperadas</p>
+        <p class="text-3xl font-black" style="color:var(--steel);" id="stats-mes-personas">—</p>
+        <p class="text-xs text-gray-400 mt-1">reservas confirmadas</p>
+      </div>
+      <div class="bg-white rounded-2xl p-5 border border-black/5">
+        <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Hora pico</p>
+        <p class="text-3xl font-black" style="color:var(--sand);" id="stats-mes-hora">—</p>
+        <p class="text-xs text-gray-400 mt-1">más reservas recibidas</p>
+      </div>
+    </div>
+
+    <!-- Mini gráfico por día -->
+    <div class="bg-white rounded-2xl p-5 border border-black/5 mb-6">
+      <p class="text-sm font-bold mb-4">Reservas por día este mes</p>
+      <div class="chart-bar-wrap" id="chart-por-dia"></div>
+    </div>
+
+    <!-- Tabla de reservas -->
+    <div class="bg-white rounded-2xl border border-black/5 overflow-hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Contacto</th>
+            <th>Mesa</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Pers.</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-reservas">
+          <tr><td colspan="8" class="text-center text-gray-400 py-8">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── MESAS ── -->
+  <div id="panel-mesas" class="panel fade-up">
+    <h1 class="text-3xl font-black mb-8">Mesas</h1>
+    <div class="grid lg:grid-cols-2 gap-8">
+
+      <!-- Lista mesas -->
+      <div>
+        <!-- Activas -->
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-lg">Mesas activas</h3>
+          <span id="mesas-activas-count" class="text-sm text-gray-400"></span>
+        </div>
+        <div id="lista-mesas-activas" class="flex flex-col gap-3">
+          <div class="text-center text-gray-400 py-8 text-sm">Cargando...</div>
+        </div>
+
+        <!-- Desactivadas (se muestra solo si hay alguna) -->
+        <div id="seccion-mesas-inactivas" style="display:none;">
+          <div class="flex items-center justify-between mt-7 mb-3">
+            <h3 class="font-bold text-base" style="color:#9ca3af;">Mesas desactivadas</h3>
+            <span id="mesas-inactivas-count" class="text-sm text-gray-400"></span>
+          </div>
+          <div id="lista-mesas-inactivas" class="flex flex-col gap-3"></div>
+        </div>
+      </div>
+
+      <!-- Nueva mesa -->
+      <div>
+        <h3 class="font-bold text-lg mb-4">Nueva mesa</h3>
+        <div class="bg-white rounded-2xl p-6 border border-black/5">
+          <form id="form-mesa" class="flex flex-col gap-4">
+            <div>
+              <label>Número / Nombre de la mesa</label>
+              <input id="mesa-numero" type="text" class="form-input" placeholder="Ej: 1, A, Terraza-1" required />
+            </div>
+            <div>
+              <label>Capacidad (personas)</label>
+              <input id="mesa-capacidad" type="number" min="1" max="30" class="form-input" placeholder="4" required />
+            </div>
+            <div>
+              <label>Ubicación</label>
+              <select id="mesa-ubicacion" class="form-input">
+                <option value="interior">Interior</option>
+                <option value="terraza">Terraza</option>
+                <option value="barra">Barra</option>
+                <option value="privado">Zona privada</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">Crear mesa</button>
+          </form>
+        </div>
+
+        <!-- Disponibilidad en tiempo real -->
+        <div class="bg-white rounded-2xl p-6 border border-black/5 mt-6">
+          <h3 class="font-bold mb-4">Disponibilidad ahora</h3>
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div>
+              <label>Fecha</label>
+              <input id="disp-fecha" type="date" class="form-input" />
+            </div>
+            <div>
+              <label>Hora</label>
+              <input id="disp-hora" type="time" class="form-input" />
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+              <button onclick="consultarDisponibilidad()" class="btn-primary w-full">Ver</button>
+            </div>
+          </div>
+          <div id="disp-resultado" class="flex flex-col gap-2 text-sm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MI BAR ── -->
+  <div id="panel-mi-bar" class="panel fade-up">
+    <h1 class="text-3xl font-black mb-8">Mi Bar</h1>
+    <div class="grid lg:grid-cols-2 gap-8">
+
+      <!-- Info básica -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-lg mb-5">Información del bar</h3>
+        <form id="form-bar" class="flex flex-col gap-4">
+          <div><label>Nombre</label><input id="edit-nombre" type="text" class="form-input" /></div>
+          <div><label>Dirección</label><input id="edit-direccion" type="text" class="form-input" /></div>
+          <div><label>Ciudad</label><input id="edit-ciudad" type="text" class="form-input" /></div>
+          <div><label>Teléfono</label><input id="edit-telefono" type="tel" class="form-input" /></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label>Apertura</label><input id="edit-apertura" type="time" class="form-input" /></div>
+            <div><label>Cierre</label><input id="edit-cierre" type="time" class="form-input" /></div>
+          </div>
+          <div><label>Descripción</label><textarea id="edit-descripcion" class="form-input" rows="3"></textarea></div>
+          <button type="submit" class="btn-primary">Guardar cambios</button>
+        </form>
+      </div>
+
+      <!-- Google Places -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-lg mb-2">Google Places</h3>
+        <p class="text-sm text-gray-400 mb-5">Vincula tu bar con Google para mostrar valoraciones reales.</p>
+        <form id="form-places" class="flex flex-col gap-4">
+          <div>
+            <label>Google Place ID</label>
+            <input id="edit-place-id" type="text" class="form-input" placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4" />
+            <p class="text-xs text-gray-400 mt-1">Encuéntralo en <a href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" target="_blank" class="underline" style="color:var(--steel);">Place ID Finder</a></p>
+          </div>
+          <button type="button" onclick="previewPlaces()" class="btn-primary" style="background:var(--steel);">Vista previa Google</button>
+          <button type="submit" class="btn-primary">Guardar Place ID</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<div id="tabsy-loader"></div>
+
+<script>
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+  }
+
+  let todasReservas = [];
+  function filtrarReservas() {
+    const estado = document.getElementById('filtro-estado').value;
+    const filtradas = estado ? todasReservas.filter(r => r.estado === estado) : todasReservas;
+    renderTablaReservas(filtradas);
+  }
+</script>
+
+<script type="module">
+  import { auth }   from '/assets/js/core/auth.js';
+  import { api }    from '/assets/js/core/api.js';
+  import { toast }  from '/assets/js/components/toast.js';
+  import { loader } from '/assets/js/components/loader.js';
+
+  if (!auth.requireBarAdmin()) throw new Error('No autorizado');
+
+  const user  = auth.getUser();
+  const barId = user.bar_id;
+
+  document.getElementById('user-info').textContent = user.name + ' · bar_admin';
+  document.getElementById('btn-logout').addEventListener('click', () => auth.logout());
+
+  const hora = new Date().getHours();
+  const saludo = hora < 14 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
+  document.getElementById('saludo').textContent = saludo + ', ' + user.name.split(' ')[0];
+
+  // ── Inicializar ────────────────────────────────────────────────
+  let _prevPendientes = 0;
+
+  async function init() {
+    if (!barId) {
+      toast('No tienes un bar asignado. Contacta con el superadmin.', 'error');
+      return;
+    }
+
+    const [bar, stats, reservas] = await Promise.all([
+      api.bares.getOne(barId),
+      api.bares.stats(barId),
+      api.reservas.porBar(barId),
+    ]);
+
+    document.getElementById('bar-nombre-sidebar').textContent = bar.nombre;
+
+    // Stats dashboard
+    document.getElementById('stat-total').textContent      = stats.total;
+    document.getElementById('stat-pendientes').textContent = stats.pendientes;
+    document.getElementById('stat-confirmadas').textContent= stats.confirmadas;
+    document.getElementById('stat-canceladas').textContent = (stats.canceladas ?? 0) + (stats.rechazadas ?? 0);
+    document.getElementById('stat-clientes').textContent   = stats.clientes_unicos;
+
+    // Distribución
+    const total = stats.total || 1;
+    document.getElementById('chart-estados').innerHTML = [
+      { label:'Confirmadas', val:stats.confirmadas, color:'#065f46', bg:'#d1fae5' },
+      { label:'Pendientes',  val:stats.pendientes,  color:'#92400e', bg:'#fef3c7' },
+      { label:'Canceladas',  val:stats.canceladas,  color:'#6b7280', bg:'#f3f4f6' },
+      { label:'Rechazadas',  val:stats.rechazadas,  color:'#991b1b', bg:'#fee2e2' },
+    ].map(({ label, val, color, bg }) => `
+      <div>
+        <div class="flex justify-between text-sm mb-1">
+          <span class="font-medium">${label}</span>
+          <span class="font-bold" style="color:${color};">${val ?? 0}</span>
+        </div>
+        <div style="background:${bg};border-radius:999px;height:6px;">
+          <div style="width:${Math.round((val??0)/total*100)}%;background:${color};height:6px;border-radius:999px;transition:width 0.6s ease;"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // Próximas
+    const hoy = new Date().toISOString().split('T')[0];
+    const proximas = reservas
+      .filter(r => r.estado === 'confirmada' && r.fecha >= hoy)
+      .sort((a,b) => a.fecha.localeCompare(b.fecha))
+      .slice(0, 5);
+
+    document.getElementById('proximas-reservas').innerHTML = proximas.length
+      ? proximas.map(r => `
+        <div class="flex justify-between items-center p-3 rounded-xl" style="background:var(--cream);">
+          <div>
+            <p class="font-semibold text-sm">${nombreCliente(r)}</p>
+            <p class="text-xs text-gray-500">Mesa ${r.mesa?.numero ?? '—'} · ${r.num_personas} personas</p>
+          </div>
+          <div class="text-right text-xs text-gray-500">
+            <p class="font-bold" style="color:var(--navy);">${r.fecha}</p>
+            <p>${r.hora}</p>
+          </div>
+        </div>
+      `).join('')
+      : '<p class="text-gray-400 text-sm">Sin reservas confirmadas próximas.</p>';
+
+    // Pendientes de acción
+    renderPendientes(reservas);
+
+    // Tabla reservas
+    window.todasReservas = reservas;
+    renderTablaReservas(reservas);
+
+    // Notificación badge
+    const pendientes = reservas.filter(r => r.estado === 'pendiente').length;
+    actualizarBadge(pendientes);
+
+    // Formulario Mi Bar
+    document.getElementById('edit-nombre').value     = bar.nombre ?? '';
+    document.getElementById('edit-direccion').value  = bar.direccion ?? '';
+    document.getElementById('edit-ciudad').value     = bar.ciudad ?? '';
+    document.getElementById('edit-telefono').value   = bar.telefono ?? '';
+    document.getElementById('edit-apertura').value   = bar.horario_apertura ?? '';
+    document.getElementById('edit-cierre').value     = bar.horario_cierre ?? '';
+    document.getElementById('edit-descripcion').value= bar.descripcion ?? '';
+    document.getElementById('edit-place-id').value   = bar.google_place_id ?? '';
+
+    // Stats del mes (Python)
+    cargarStatsMes();
+    // Mesas
+    cargarMesas();
+  }
+
+  // ── Helper nombre cliente ────────────────────────────────────
+  function nombreCliente(r) {
+    return r.user?.name ?? r.nombre_invitado ?? 'Invitado';
+  }
+  function contactoCliente(r) {
+    const email = r.user?.email ?? r.email_invitado ?? '';
+    const tel   = r.telefono_invitado ?? '';
+    return [email, tel].filter(Boolean).join(' · ') || '—';
+  }
+
+  // ── Badge notificaciones ─────────────────────────────────────
+  function actualizarBadge(n) {
+    const badge = document.getElementById('badge-reservas');
+    if (n > 0) {
+      badge.textContent = n;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+    if (n > _prevPendientes && _prevPendientes >= 0) {
+      const diff = n - _prevPendientes;
+      if (diff > 0 && _prevPendientes >= 0) {
+        toast(`${diff} nueva${diff>1?'s':''} reserva${diff>1?'s':''} pendiente${diff>1?'s':''}`, 'info');
+        const notif = document.getElementById('notif-nueva');
+        document.getElementById('notif-texto').textContent = `${n} reserva${n>1?'s':''} pendiente${n>1?'s':''}`;
+        notif.style.display = 'flex';
+      }
+    }
+    _prevPendientes = n;
+  }
+
+  // ── Polling cada 30s ─────────────────────────────────────────
+  setInterval(async () => {
+    try {
+      const reservas = await api.reservas.porBar(barId);
+      const pendientes = reservas.filter(r => r.estado === 'pendiente').length;
+      actualizarBadge(pendientes);
+    } catch {}
+  }, 30000);
+
+  // ── Pendientes de acción ─────────────────────────────────────
+  function renderPendientes(reservas) {
+    const pendientes = reservas.filter(r => r.estado === 'pendiente');
+    document.getElementById('pendientes-lista').innerHTML = pendientes.length
+      ? pendientes.map(r => `
+        <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-50 last:border-0">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style="background:var(--navy);">
+              ${nombreCliente(r).charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p class="font-semibold text-sm">${nombreCliente(r)}
+                ${!r.user ? '<span class="ml-1 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">invitado</span>' : ''}
+              </p>
+              <p class="text-xs text-gray-400">Mesa ${r.mesa?.numero ?? '—'} · ${r.num_personas} pers · ${r.fecha} ${r.hora}</p>
+              <p class="text-xs text-gray-400">${contactoCliente(r)}</p>
+              ${r.notas ? `<p class="text-xs text-gray-400 italic">"${r.notas}"</p>` : ''}
+            </div>
+          </div>
+          <div class="flex gap-2 flex-shrink-0">
+            <button class="btn-confirm" onclick="cambiarEstado(${r.id}, 'confirmada')">✓ Confirmar</button>
+            <button class="btn-reject"  onclick="cambiarEstado(${r.id}, 'rechazada')">✗ Rechazar</button>
+          </div>
+        </div>
+      `).join('')
+      : '<div class="p-8 text-center text-gray-400 text-sm">Sin reservas pendientes</div>';
+  }
+
+  // ── Cambiar estado ───────────────────────────────────────────
+  window.cambiarEstado = async (id, estado) => {
+    try {
+      await api.reservas.cambiarEstado(id, estado);
+      toast(estado === 'confirmada' ? '✓ Reserva confirmada' : 'Reserva rechazada', estado === 'confirmada' ? 'success' : 'info');
+      init();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  // ── Tabla reservas ───────────────────────────────────────────
+  window.renderTablaReservas = (reservas) => {
+    const colors = { pendiente:'badge-pendiente', confirmada:'badge-confirmada', cancelada:'badge-cancelada', rechazada:'badge-rechazada' };
+    document.getElementById('tabla-reservas').innerHTML = reservas.length
+      ? reservas.map(r => `
+        <tr>
+          <td class="font-medium">
+            ${nombreCliente(r)}
+            ${!r.user ? '<span class="ml-1 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">inv</span>' : ''}
+          </td>
+          <td class="text-gray-400 text-xs">${contactoCliente(r)}</td>
+          <td class="text-gray-500">Mesa ${r.mesa?.numero ?? '—'}</td>
+          <td>${r.fecha}</td>
+          <td>${r.hora}</td>
+          <td class="text-center">${r.num_personas}</td>
+          <td><span class="badge ${colors[r.estado] ?? ''}">${r.estado}</span></td>
+          <td>
+            ${r.estado === 'pendiente' ? `
+              <div class="flex gap-1">
+                <button class="btn-confirm" onclick="cambiarEstado(${r.id}, 'confirmada')">✓</button>
+                <button class="btn-reject"  onclick="cambiarEstado(${r.id}, 'rechazada')">✗</button>
+              </div>
+            ` : '—'}
+          </td>
+        </tr>
+      `).join('')
+      : '<tr><td colspan="8" class="text-center text-gray-400 py-8">Sin reservas</td></tr>';
+  };
+
+  // ── Stats del mes (Python) ────────────────────────────────────
+  async function cargarStatsMes() {
+    try {
+      const res  = await fetch(`/stats/${barId}/mes`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      document.getElementById('stats-mes-label').textContent = data.mes;
+      document.getElementById('stats-mes-total').textContent = data.total;
+      document.getElementById('stats-mes-tasa').textContent  = data.tasa_confirmacion + '%';
+      document.getElementById('stats-mes-personas').textContent = data.personas_confirmadas;
+
+      const hp = data.hora_pico;
+      document.getElementById('stats-mes-hora').textContent = hp !== null ? `${hp}:00h` : '—';
+
+      const v = data.variacion_mes_anterior;
+      const varEl = document.getElementById('stats-mes-var');
+      varEl.textContent = v > 0 ? `+${v} vs mes anterior` : v < 0 ? `${v} vs mes anterior` : 'igual que mes anterior';
+      varEl.style.color = v > 0 ? '#065f46' : v < 0 ? '#991b1b' : '#6b7280';
+
+      // Mini gráfico
+      const wrap = document.getElementById('chart-por-dia');
+      if (data.por_dia && data.por_dia.length > 0) {
+        const maxVal = Math.max(...data.por_dia.map(d => d.total), 1);
+        wrap.innerHTML = data.por_dia.map(d => `
+          <div class="chart-bar-col">
+            <div class="chart-bar-fill" style="height:${Math.round(d.total/maxVal*100)}%;background:var(--steel);opacity:0.75;" title="Día ${d.dia}: ${d.total} reservas"></div>
+            <span class="chart-bar-label">${d.dia}</span>
+          </div>
+        `).join('');
+      } else {
+        wrap.innerHTML = '<p class="text-sm text-gray-400">Sin datos este mes</p>';
+      }
+    } catch {
+      document.getElementById('stats-mes-total').textContent = '—';
+    }
+  }
+
+  // ── Mesas ────────────────────────────────────────────────────
+  function renderMesaCard(m) {
+    const esActiva = !!m.activa;
+    return `
+      <div class="mesa-card" style="${!esActiva ? 'opacity:0.65;' : ''}">
+        <div class="flex items-center gap-3">
+          <div class="mesa-dot" style="background:${esActiva ? '#10b981' : '#d1d5db'};"></div>
+          <div>
+            <p class="font-semibold text-sm">Mesa ${m.numero}</p>
+            <p class="text-xs text-gray-400">${m.capacidad} personas · ${m.ubicacion ?? 'interior'}</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="toggleMesa(${m.id}, ${esActiva})"
+            style="font-size:0.75rem;padding:5px 12px;border-radius:8px;border:1px solid;cursor:pointer;font-weight:600;transition:all 0.15s;
+            ${esActiva ? 'border-color:#fca5a5;color:#991b1b;background:#fee2e2;' : 'border-color:#6ee7b7;color:#065f46;background:#d1fae5;'}">
+            ${esActiva ? 'Desactivar' : 'Activar'}
+          </button>
+          <button onclick="borrarMesa(${m.id})"
+            style="font-size:0.75rem;padding:5px 12px;border-radius:8px;border:1px solid #e5e7eb;color:#6b7280;background:white;cursor:pointer;font-weight:600;">
+            Borrar
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function cargarMesas() {
+    try {
+      const mesas    = await api.mesas.getByBar(barId);
+      const activas  = mesas.filter(m => !!m.activa);
+      const inactivas = mesas.filter(m => !m.activa);
+
+      const cntEl = document.getElementById('mesas-activas-count');
+      if (cntEl) cntEl.textContent = `${activas.length} mesa${activas.length !== 1 ? 's' : ''}`;
+
+      const contA = document.getElementById('lista-mesas-activas');
+      if (contA) {
+        contA.innerHTML = activas.length === 0
+          ? '<p class="text-gray-400 text-sm text-center py-8">No hay mesas activas. Crea la primera.</p>'
+          : activas.map(renderMesaCard).join('');
+      }
+
+      const secI  = document.getElementById('seccion-mesas-inactivas');
+      const contI = document.getElementById('lista-mesas-inactivas');
+      const cntI  = document.getElementById('mesas-inactivas-count');
+      if (secI) {
+        if (inactivas.length === 0) {
+          secI.style.display = 'none';
+        } else {
+          secI.style.display = 'block';
+          if (cntI) cntI.textContent = `${inactivas.length} mesa${inactivas.length !== 1 ? 's' : ''}`;
+          if (contI) contI.innerHTML = inactivas.map(renderMesaCard).join('');
+        }
+      }
+    } catch (e) { toast('Error cargando mesas', 'error'); }
+  }
+
+  window.toggleMesa = async (id, activa) => {
+    try {
+      await api.mesas.update(barId, id, { activa: !activa });
+      toast(activa ? 'Mesa desactivada' : 'Mesa activada', 'success');
+      cargarMesas();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  window.borrarMesa = async (id) => {
+    if (!confirm('¿Borrar esta mesa? Se eliminarán sus reservas asociadas.')) return;
+    try {
+      await api.mesas.delete(barId, id);
+      toast('Mesa eliminada', 'info');
+      cargarMesas();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  // Crear mesa
+  document.getElementById('form-mesa').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+      await api.mesas.create(barId, {
+        numero:    document.getElementById('mesa-numero').value,
+        capacidad: parseInt(document.getElementById('mesa-capacidad').value),
+        ubicacion: document.getElementById('mesa-ubicacion').value,
+      });
+      toast('Mesa creada correctamente', 'success');
+      e.target.reset();
+      cargarMesas();
+    } catch (e) { toast(e.message, 'error'); }
+    finally { btn.disabled = false; }
+  });
+
+  // Disponibilidad
+  window.consultarDisponibilidad = async () => {
+    const fecha = document.getElementById('disp-fecha').value;
+    const hora  = document.getElementById('disp-hora').value;
+    const res   = document.getElementById('disp-resultado');
+    if (!fecha || !hora) { toast('Selecciona fecha y hora', 'warning'); return; }
+    res.innerHTML = '<p class="text-gray-400">Consultando...</p>';
+    try {
+      const mesas = await api.mesas.getByBar(barId, fecha, hora);
+      res.innerHTML = mesas.map(m => `
+        <div class="flex items-center justify-between p-3 rounded-xl" style="background:${m.disponible === false ? '#fee2e2' : '#d1fae5'};">
+          <span class="font-medium text-sm">Mesa ${m.numero} · ${m.capacidad} pers · ${m.ubicacion ?? ''}</span>
+          <span class="text-xs font-bold" style="color:${m.disponible === false ? '#991b1b' : '#065f46'};">
+            ${m.disponible === false ? 'Ocupada' : 'Libre'}
+          </span>
+        </div>
+      `).join('') || '<p class="text-gray-400">Sin mesas</p>';
+    } catch { res.innerHTML = '<p class="text-red-400 text-sm">Error al consultar</p>'; }
+  };
+
+  // Fecha hoy por defecto
+  document.getElementById('disp-fecha').value = new Date().toISOString().split('T')[0];
+
+  // ── Guardar info bar ─────────────────────────────────────────
+  document.getElementById('form-bar').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loader.show();
+    try {
+      await api.bares.update(barId, {
+        nombre:           document.getElementById('edit-nombre').value,
+        direccion:        document.getElementById('edit-direccion').value,
+        ciudad:           document.getElementById('edit-ciudad').value,
+        telefono:         document.getElementById('edit-telefono').value,
+        horario_apertura: document.getElementById('edit-apertura').value,
+        horario_cierre:   document.getElementById('edit-cierre').value,
+        descripcion:      document.getElementById('edit-descripcion').value,
+      });
+      toast('Bar actualizado correctamente', 'success');
+    } catch (e) { toast(e.message, 'error'); }
+    finally { loader.hide(); }
+  });
+
+  document.getElementById('form-places').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loader.show();
+    try {
+      await api.bares.update(barId, { google_place_id: document.getElementById('edit-place-id').value });
+      toast('Google Place ID guardado', 'success');
+    } catch (e) { toast(e.message, 'error'); }
+    finally { loader.hide(); }
+  });
+
+  window.previewPlaces = () => toast('Configura la API Key de Google en la ficha del bar', 'info');
+
+  init();
+</script>
+</body>
+</html>

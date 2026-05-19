@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tabsy Admin — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --navy:#0f2240; --blue:#1a3a6b; --steel:#4a6fa5; --sand:#c9a96e; --cream:#f5f0e8; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',sans-serif; background:#f8f9fc; color:var(--navy); min-height:100vh; display:flex; }
+    h1,h2,h3 { font-family:'Playfair Display',serif; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+    .fade-up { animation:fadeUp 0.5s ease both; }
+
+    .sidebar { width:260px; flex-shrink:0; background:var(--navy); min-height:100vh; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:11px 20px; border-radius:10px; margin:2px 12px; color:rgba(255,255,255,0.55); font-size:0.9rem; font-weight:500; text-decoration:none; transition:all 0.2s; cursor:pointer; border:none; background:transparent; width:calc(100% - 24px); text-align:left; }
+    .sidebar-link:hover { background:rgba(255,255,255,0.08); color:white; }
+    .sidebar-link.active { background:rgba(201,169,110,0.2); color:var(--sand); }
+    .sidebar-section { padding:16px 20px 6px; font-size:0.68rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.25); }
+
+    .main { flex:1; overflow-y:auto; }
+    .panel { display:none; }
+    .panel.active { display:block; }
+
+    .stat-card { background:white; border-radius:18px; padding:24px; border:1px solid rgba(15,34,64,0.06); transition:box-shadow 0.2s; }
+    .stat-card:hover { box-shadow:0 4px 20px rgba(15,34,64,0.08); }
+
+    table { width:100%; border-collapse:collapse; }
+    thead th { text-align:left; padding:10px 14px; font-size:0.75rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(15,34,64,0.4); border-bottom:1px solid rgba(15,34,64,0.08); }
+    tbody tr { border-bottom:1px solid rgba(15,34,64,0.05); transition:background 0.15s; }
+    tbody tr:hover { background:rgba(15,34,64,0.02); }
+    tbody td { padding:12px 14px; font-size:0.88rem; vertical-align:middle; }
+
+    .form-input { width:100%; background:#f8f9fc; border:1.5px solid rgba(15,34,64,0.1); border-radius:10px; padding:10px 14px; font-family:'Inter',sans-serif; font-size:0.88rem; color:var(--navy); transition:all 0.2s; }
+    .form-input:focus { outline:none; border-color:var(--steel); background:white; }
+    .form-input::placeholder { color:rgba(15,34,64,0.3); }
+    label { display:block; font-size:0.75rem; font-weight:600; color:var(--navy); opacity:0.5; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:4px; }
+    .btn-primary { background:var(--navy); color:white; border:none; border-radius:10px; padding:10px 20px; font-family:'Inter',sans-serif; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .btn-primary:hover { background:var(--blue); }
+    .btn-danger { background:#fee2e2; color:#991b1b; border:none; border-radius:8px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer; }
+    .btn-danger:hover { background:#fecaca; }
+
+    .badge { font-size:0.68rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:3px 10px; border-radius:999px; }
+    .badge-pendiente  { background:#fef3c7; color:#92400e; }
+    .badge-confirmada { background:#d1fae5; color:#065f46; }
+    .badge-cancelada  { background:#f3f4f6; color:#6b7280; }
+    .badge-rechazada  { background:#fee2e2; color:#991b1b; }
+    .role-super { background:#ede9fe; color:#5b21b6; }
+    .role-bar   { background:#dbeafe; color:#1e40af; }
+    .role-cli   { background:#f3f4f6; color:#374151; }
+    .verif-yes  { background:#d1fae5; color:#065f46; }
+    .verif-no   { background:#fee2e2; color:#991b1b; }
+
+    /* user row clickable */
+    .user-row { cursor:pointer; }
+    .user-row:hover td { background:rgba(15,34,64,0.03); }
+
+    /* Bar mini stat */
+    .bar-stat-bar { height:6px; border-radius:999px; background:var(--steel); transition:width 0.6s ease; }
+
+    /* Chart bars */
+    .chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:80px; justify-content:flex-end; }
+    .chart-fill { width:100%; border-radius:3px 3px 0 0; min-height:2px; transition:height 0.5s ease; }
+    .chart-lbl { font-size:0.6rem; color:rgba(15,34,64,0.4); }
+
+    /* Modal */
+    .modal-overlay { position:fixed;inset:0;z-index:2000;background:rgba(10,20,40,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px; }
+    .modal-box { background:white;border-radius:24px;box-shadow:0 24px 80px rgba(15,34,64,0.22);width:100%;max-width:480px;overflow:hidden; }
+  </style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="p-6 mb-2">
+    <img src="/assets/images/logo2-2.png" alt="Tabsy" style="height:80px;width:auto;" />
+    <span class="text-xs mt-2 block font-semibold" style="color:rgba(201,169,110,0.7);letter-spacing:0.06em;text-transform:uppercase;">Super Admin</span>
+  </div>
+
+  <div class="sidebar-section">General</div>
+  <button class="sidebar-link active" onclick="showPanel('dashboard')" id="nav-dashboard">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+    Dashboard
+  </button>
+  <button class="sidebar-link" onclick="showPanel('estadisticas')" id="nav-estadisticas">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+    Estadísticas
+  </button>
+
+  <div class="sidebar-section">Gestión</div>
+  <button class="sidebar-link" onclick="showPanel('bares')" id="nav-bares">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+    Bares
+  </button>
+  <button class="sidebar-link" onclick="showPanel('usuarios')" id="nav-usuarios">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+    Usuarios
+  </button>
+  <button class="sidebar-link" onclick="showPanel('reservas')" id="nav-reservas">
+    <span style="display:inline-flex;align-items:center;min-width:20px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+    Reservas
+  </button>
+
+  <div class="mt-auto p-6">
+    <div id="user-info" class="text-xs text-white/30"></div>
+    <button id="btn-logout" class="mt-3 w-full text-left text-sm text-red-400 hover:text-red-300 transition">→ Cerrar sesión</button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main p-8">
+
+  <!-- ── DASHBOARD ── -->
+  <div id="panel-dashboard" class="panel active fade-up">
+    <h1 class="text-3xl font-black mb-1" id="saludo-admin">Hola</h1>
+    <p class="text-gray-400 mb-8 text-sm">Resumen general de Tabsy</p>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div class="stat-card" style="border-left:4px solid var(--steel);">
+        <p class="text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1" style="color:var(--steel);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Bares</p>
+        <p class="text-3xl font-black mb-1" id="stat-bares">—</p>
+        <p class="text-sm text-gray-400">Bares activos</p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #8b5cf6;">
+        <p class="text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1" style="color:#8b5cf6;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Usuarios</p>
+        <p class="text-3xl font-black mb-1" id="stat-usuarios">—</p>
+        <p class="text-sm text-gray-400">Registrados</p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #10b981;">
+        <p class="text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1" style="color:#10b981;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Reservas</p>
+        <p class="text-3xl font-black mb-1" id="stat-reservas">—</p>
+        <p class="text-sm text-gray-400">Reservas totales</p>
+      </div>
+      <div class="stat-card" style="background:var(--navy);border-left:4px solid var(--sand);">
+        <p class="text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1" style="color:rgba(201,169,110,0.8);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pendientes</p>
+        <p class="text-3xl font-black mb-1 text-white" id="stat-pendientes">—</p>
+        <p class="text-sm" style="color:rgba(255,255,255,0.45);">Sin respuesta</p>
+      </div>
+    </div>
+
+    <h2 class="text-xl font-bold mb-4">Últimas reservas</h2>
+    <div class="bg-white rounded-2xl border border-black/5 overflow-hidden">
+      <div id="todas-reservas" class="divide-y divide-gray-50">
+        <div class="p-6 text-center text-gray-400 text-sm">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ESTADÍSTICAS (Python) ── -->
+  <div id="panel-estadisticas" class="panel fade-up">
+    <div class="mb-8">
+      <h1 class="text-3xl font-black mb-1">Estadísticas de la app</h1>
+      <p class="text-sm text-gray-400">Análisis global · Powered by Python</p>
+    </div>
+
+    <!-- Fila 1: KPIs reservas -->
+    <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Reservas</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="py-kpis">
+      <div class="stat-card" style="border-left:4px solid #10b981;">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-gray-400">Total reservas</p>
+        <p class="text-3xl font-black mb-1" id="py-total-res">—</p>
+        <p class="text-xs" id="py-var-mes"></p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid var(--steel);">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-gray-400">Este mes</p>
+        <p class="text-3xl font-black mb-1" id="py-mes-actual">—</p>
+        <p class="text-xs text-gray-400" id="py-mes-var-txt"></p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #065f46;">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-gray-400">Tasa confirmación</p>
+        <p class="text-3xl font-black mb-1" style="color:#065f46;" id="py-tasa">—</p>
+        <p class="text-xs text-gray-400">del total</p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid var(--sand);">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-gray-400">Lead time medio</p>
+        <p class="text-3xl font-black mb-1" style="color:var(--sand);" id="py-lead">—</p>
+        <p class="text-xs text-gray-400">días de antelación</p>
+      </div>
+    </div>
+
+    <!-- Fila 2: KPIs usuarios / SaaS -->
+    <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Usuarios · SaaS</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="stat-card" style="border-left:4px solid #8b5cf6;">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-gray-400">Nuevos este mes</p>
+        <p class="text-3xl font-black mb-1" id="py-nuevos-users">—</p>
+        <p class="text-xs" id="py-nuevos-var"></p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #06b6d4;">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-gray-400">Tasa activación</p>
+        <p class="text-3xl font-black mb-1" style="color:#0891b2;" id="py-activacion">—</p>
+        <p class="text-xs text-gray-400">han hecho ≥1 reserva</p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #f59e0b;">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-gray-400">Retención</p>
+        <p class="text-3xl font-black mb-1" style="color:#92400e;" id="py-retencion">—</p>
+        <p class="text-xs text-gray-400">han repetido reserva</p>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #ef4444;">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-gray-400">Bares sin actividad</p>
+        <p class="text-3xl font-black mb-1" style="color:#991b1b;" id="py-bares-inactivos">—</p>
+        <p class="text-xs text-gray-400">sin ninguna reserva</p>
+      </div>
+    </div>
+
+    <!-- Fila 3: Gráficos -->
+    <div class="grid lg:grid-cols-3 gap-6 mb-6">
+
+      <!-- Tendencia reservas -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-sm mb-1">Reservas por mes</h3>
+        <p class="text-xs text-gray-400 mb-4">Últimos 6 meses</p>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:70px;" id="py-chart-tendencia"></div>
+      </div>
+
+      <!-- Crecimiento usuarios -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-sm mb-1">Nuevos usuarios</h3>
+        <p class="text-xs text-gray-400 mb-4">Últimos 8 meses</p>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:70px;" id="py-chart-usuarios"></div>
+      </div>
+
+      <!-- Por día semana -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-sm mb-1">Días más populares</h3>
+        <p class="text-xs text-gray-400 mb-4">Reservas por día de la semana</p>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:70px;" id="py-chart-dias"></div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-6 mb-6">
+
+      <!-- Horas pico -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-sm mb-1">Horas pico</h3>
+        <p class="text-xs text-gray-400 mb-4">Distribución de reservas por hora</p>
+        <div style="display:flex;align-items:flex-end;gap:2px;height:60px;" id="py-chart-horas"></div>
+      </div>
+
+      <!-- Top ciudades -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-sm mb-5">Top ciudades</h3>
+        <div id="py-ciudades" class="flex flex-col gap-3"></div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-6 mb-6">
+
+      <!-- Top bares -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-sm mb-5">Top bares por reservas</h3>
+        <div id="py-top-bares" class="flex flex-col gap-3"></div>
+      </div>
+
+      <!-- Distribución estados + tasa rechazo -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5">
+        <h3 class="font-bold text-sm mb-5">Estado global de reservas</h3>
+        <div id="py-estados" class="flex flex-col gap-3 mb-6"></div>
+        <h3 class="font-bold text-sm mb-3">Bares con más rechazos</h3>
+        <div id="py-rechazos" class="flex flex-col gap-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BARES ── -->
+  <div id="panel-bares" class="panel fade-up">
+    <h1 class="text-3xl font-black mb-8">Gestión de bares</h1>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="bg-white rounded-2xl p-6 border border-black/5 shadow-sm">
+        <h3 class="font-bold text-lg mb-1">Añadir bar</h3>
+        <p class="text-xs mb-5" style="color:rgba(15,34,64,0.4);">Escribe el nombre y selecciona de Google para rellenar automáticamente.</p>
+        <form id="form-bar" class="flex flex-col gap-4">
+          <input type="hidden" id="bar-place-id" />
+          <div>
+            <label>Nombre <span style="color:var(--sand);font-size:0.65rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;"> · Google Places</span></label>
+            <div class="relative">
+              <input id="bar-nombre" type="text" class="form-input" placeholder="Buscar bar en Google..." required autocomplete="off" />
+              <span id="places-icon" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:rgba(15,34,64,0.3);pointer-events:none;display:inline-flex;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            </div>
+          </div>
+          <div id="place-preview" style="display:none;background:rgba(201,169,110,0.08);border:1.5px solid rgba(201,169,110,0.25);border-radius:12px;padding:12px 14px;gap:10px;align-items:flex-start;">
+            <img id="place-photo" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#e0e2e8;" />
+            <div style="flex:1;min-width:0;">
+              <p id="place-name-preview" class="font-bold text-sm truncate"></p>
+              <p id="place-addr-preview" class="text-xs mt-0.5 truncate" style="color:rgba(15,34,64,0.5);"></p>
+              <div class="flex items-center gap-1 mt-1">
+                <span id="place-rating-stars" class="text-xs" style="color:#f59e0b;"></span>
+                <span id="place-rating-num" class="text-xs font-semibold"></span>
+              </div>
+            </div>
+          </div>
+          <div><label>Dirección</label><input id="bar-direccion" type="text" class="form-input" placeholder="Calle Mayor, 12" required /></div>
+          <div><label>Ciudad</label><input id="bar-ciudad" type="text" class="form-input" placeholder="Sanlúcar de Barrameda" required /></div>
+          <div><label>Teléfono</label><input id="bar-telefono" type="tel" class="form-input" placeholder="956 000 000" /></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label>Apertura</label><input id="bar-apertura" type="time" class="form-input" /></div>
+            <div><label>Cierre</label><input id="bar-cierre" type="time" class="form-input" /></div>
+          </div>
+          <div><label>Descripción</label><textarea id="bar-descripcion" class="form-input" rows="2" placeholder="Breve descripción..."></textarea></div>
+          <button type="submit" class="btn-primary mt-1">Crear bar</button>
+        </form>
+      </div>
+      <div class="lg:col-span-2">
+        <h3 class="font-bold text-lg mb-4">Bares registrados</h3>
+        <div id="lista-bares" class="flex flex-col gap-3">
+          <div class="text-center text-gray-400 py-8">Cargando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── USUARIOS ── -->
+  <div id="panel-usuarios" class="panel fade-up">
+    <h1 class="text-3xl font-black mb-8">Gestión de usuarios</h1>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="bg-white rounded-2xl p-6 border border-black/5 shadow-sm">
+        <h3 class="font-bold text-lg mb-5">Añadir usuario</h3>
+        <form id="form-usuario" class="flex flex-col gap-4">
+          <div><label>Nombre</label><input id="user-name" type="text" class="form-input" required /></div>
+          <div><label>Email</label><input id="user-email" type="email" class="form-input" required /></div>
+          <div><label>Contraseña</label><input id="user-password" type="password" class="form-input" placeholder="Mínimo 8 caracteres" required /></div>
+          <div>
+            <label>Rol</label>
+            <select id="user-role" class="form-input" onchange="toggleBarSelect(this.value)">
+              <option value="cliente">Cliente</option>
+              <option value="bar_admin">Admin de Bar</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+          </div>
+          <div id="bar-select-wrap" class="hidden">
+            <label>Bar asignado</label>
+            <select id="user-bar" class="form-input"><option value="">Cargando bares...</option></select>
+          </div>
+          <button type="submit" class="btn-primary mt-1">Crear usuario</button>
+        </form>
+      </div>
+
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-lg">Todos los usuarios</h3>
+          <input id="search-usuarios" type="text" placeholder="Buscar..." class="form-input" style="width:200px;padding:7px 12px;font-size:0.82rem;" oninput="filtrarUsuarios(this.value)" />
+        </div>
+        <div class="bg-white rounded-2xl border border-black/5 overflow-hidden">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Bar</th>
+                <th>Verificado</th>
+                <th>Registro</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tabla-usuarios">
+              <tr><td colspan="6" class="text-center text-gray-400 py-8">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESERVAS ── -->
+  <div id="panel-reservas" class="panel fade-up">
+    <h1 class="text-3xl font-black mb-8">Todas las reservas</h1>
+    <div class="bg-white rounded-2xl border border-black/5 overflow-hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Bar</th>
+            <th>Mesa</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Personas</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="todas-reservas-table">
+          <tr><td colspan="7" class="text-center text-gray-400 py-8">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══ MODAL USUARIO ══ -->
+<div id="modal-usuario" style="display:none;" class="modal-overlay" onclick="if(event.target===this)cerrarModalUser()">
+  <div class="modal-box">
+    <!-- Cabecera -->
+    <div style="background:linear-gradient(135deg,#0f2240,#1a3a6b);padding:28px 28px 24px;position:relative;">
+      <button onclick="cerrarModalUser()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="mu-avatar" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#c9a96e,#b8924a);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;color:white;flex-shrink:0;"></div>
+        <div>
+          <h2 id="mu-nombre" style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:800;color:white;margin:0;"></h2>
+          <p id="mu-email" style="font-size:0.82rem;color:rgba(255,255,255,0.55);margin:2px 0 0;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div style="padding:24px 28px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div style="background:#f8f9fc;border-radius:12px;padding:14px;">
+          <p style="font-size:0.7rem;font-weight:700;color:rgba(15,34,64,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Rol</p>
+          <span id="mu-rol" class="badge"></span>
+        </div>
+        <div style="background:#f8f9fc;border-radius:12px;padding:14px;">
+          <p style="font-size:0.7rem;font-weight:700;color:rgba(15,34,64,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Email verificado</p>
+          <span id="mu-verif" class="badge"></span>
+        </div>
+        <div style="background:#f8f9fc;border-radius:12px;padding:14px;" id="mu-bar-wrap">
+          <p style="font-size:0.7rem;font-weight:700;color:rgba(15,34,64,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Bar asignado</p>
+          <p id="mu-bar" style="font-size:0.88rem;font-weight:600;color:#0f2240;"></p>
+        </div>
+        <div style="background:#f8f9fc;border-radius:12px;padding:14px;">
+          <p style="font-size:0.7rem;font-weight:700;color:rgba(15,34,64,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Miembro desde</p>
+          <p id="mu-fecha" style="font-size:0.88rem;font-weight:600;color:#0f2240;"></p>
+        </div>
+      </div>
+
+      <!-- Cambiar rol rápido -->
+      <div style="border-top:1px solid rgba(15,34,64,0.07);padding-top:18px;display:flex;align-items:center;gap:10px;">
+        <select id="mu-nuevo-rol" class="form-input" style="flex:1;">
+          <option value="cliente">Cliente</option>
+          <option value="bar_admin">Admin de Bar</option>
+          <option value="superadmin">Super Admin</option>
+        </select>
+        <button onclick="cambiarRolUsuario()" class="btn-primary" style="white-space:nowrap;">Cambiar rol</button>
+        <button onclick="eliminarUsuario()" class="btn-danger">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tabsy-loader"></div>
+
+<script>
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+    if (name === 'estadisticas') cargarEstadisticasPython();
+    if (name === 'bares' && !_placesLoaded) cargarGooglePlaces();
+  }
+
+  function toggleBarSelect(role) {
+    document.getElementById('bar-select-wrap').classList.toggle('hidden', role !== 'bar_admin');
+  }
+
+  let _todosUsuarios = [];
+  function filtrarUsuarios(q) {
+    const low = q.toLowerCase();
+    const fil = _todosUsuarios.filter(u =>
+      u.name.toLowerCase().includes(low) || u.email.toLowerCase().includes(low)
+    );
+    renderUsuarios(fil);
+  }
+
+  let _usuarioActivo = null;
+  function cerrarModalUser() {
+    document.getElementById('modal-usuario').style.display = 'none';
+    _usuarioActivo = null;
+  }
+</script>
+
+<script type="module">
+  import { auth }  from '/assets/js/core/auth.js';
+  import { api }   from '/assets/js/core/api.js';
+  import { toast } from '/assets/js/components/toast.js';
+  import { loader } from '/assets/js/components/loader.js';
+
+  if (!auth.requireSuperAdmin()) throw new Error();
+
+  const user = auth.getUser();
+  const hora = new Date().getHours();
+  document.getElementById('saludo-admin').textContent = (hora < 14 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches') + (user?.name ? ', ' + user.name.split(' ')[0] : '');
+  document.getElementById('user-info').textContent = user?.name + ' · ' + user?.role;
+  document.getElementById('btn-logout').addEventListener('click', () => auth.logout());
+
+  // ── Dashboard stats ──────────────────────────────────────────
+  async function loadStats() {
+    const [bares, usuarios, reservas] = await Promise.all([
+      api.bares.getAll(), api.usuarios.getAll(), api.reservas.todas()
+    ]);
+
+    document.getElementById('stat-bares').textContent    = bares.length;
+    document.getElementById('stat-usuarios').textContent = usuarios.length;
+    document.getElementById('stat-reservas').textContent = reservas.length;
+    document.getElementById('stat-pendientes').textContent = reservas.filter(r => r.estado === 'pendiente').length;
+
+    // Últimas reservas
+    const colors = {pendiente:'badge-pendiente',confirmada:'badge-confirmada',cancelada:'badge-cancelada',rechazada:'badge-rechazada'};
+    document.getElementById('todas-reservas').innerHTML = reservas.slice(0,10).map(r => `
+      <div class="p-4 flex justify-between items-center text-sm">
+        <div class="flex items-center gap-4">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:var(--navy);">
+            ${(r.user?.name ?? r.nombre_invitado ?? '?')[0].toUpperCase()}
+          </div>
+          <div>
+            <p class="font-medium">${r.user?.name ?? r.nombre_invitado ?? '—'}${!r.user ? ' <span class="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full ml-1">inv</span>' : ''}</p>
+            <p class="text-gray-400 text-xs">${r.bar?.nombre ?? '—'} · Mesa ${r.mesa?.numero ?? '—'}</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-gray-500 text-xs">${r.fecha} ${r.hora}</p>
+          <span class="badge ${colors[r.estado] ?? ''}">${r.estado}</span>
+        </div>
+      </div>
+    `).join('');
+
+    // Select bares en form usuario
+    const selBar = document.getElementById('user-bar');
+    selBar.innerHTML = bares.map(b => `<option value="${b.id}">${b.nombre}</option>`).join('');
+
+    // Tabla reservas
+    document.getElementById('todas-reservas-table').innerHTML = reservas.map(r => `
+      <tr>
+        <td class="font-medium">${r.user?.name ?? r.nombre_invitado ?? '—'}</td>
+        <td class="text-gray-500">${r.bar?.nombre ?? '—'}</td>
+        <td class="text-gray-500">${r.mesa?.numero ?? '—'}</td>
+        <td>${r.fecha}</td>
+        <td>${r.hora}</td>
+        <td class="text-center">${r.num_personas}</td>
+        <td><span class="badge ${colors[r.estado] ?? ''}">${r.estado}</span></td>
+      </tr>
+    `).join('');
+
+    // Usuarios (guardar global para filtro y modal)
+    window._todosUsuarios = usuarios;
+    renderUsuarios(usuarios);
+  }
+
+  // ── Render tabla usuarios ────────────────────────────────────
+  function rolBadge(role) {
+    if (role === 'superadmin') return `<span class="badge role-super">Superadmin</span>`;
+    if (role === 'bar_admin')  return `<span class="badge role-bar">Bar Admin</span>`;
+    return `<span class="badge role-cli">Cliente</span>`;
+  }
+  function verifBadge(v) {
+    return v
+      ? `<span class="badge verif-yes"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Verificado</span>`
+      : `<span class="badge verif-no"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>No verif.</span>`;
+  }
+
+  window.renderUsuarios = function(usuarios) {
+    document.getElementById('tabla-usuarios').innerHTML = usuarios.length
+      ? usuarios.map(u => `
+        <tr class="user-row" onclick="abrirModalUser(${u.id})">
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:var(--navy);">
+                ${u.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p class="font-semibold text-sm">${u.name}</p>
+                <p class="text-xs text-gray-400">${u.email}</p>
+              </div>
+            </div>
+          </td>
+          <td>${rolBadge(u.role)}</td>
+          <td class="text-gray-400 text-sm">${u.bar?.nombre ?? '—'}</td>
+          <td>${verifBadge(!!u.email_verified_at)}</td>
+          <td class="text-gray-400 text-xs">${u.created_at ? new Date(u.created_at).toLocaleDateString('es-ES') : '—'}</td>
+          <td>
+            <button onclick="event.stopPropagation();abrirModalUser(${u.id})" style="font-size:0.75rem;padding:4px 10px;border-radius:8px;border:1px solid rgba(15,34,64,0.12);color:rgba(15,34,64,0.5);background:white;cursor:pointer;">
+              Ver info
+            </button>
+          </td>
+        </tr>
+      `).join('')
+      : '<tr><td colspan="6" class="text-center text-gray-400 py-8">Sin resultados</td></tr>';
+  };
+
+  // ── Modal usuario ────────────────────────────────────────────
+  window.abrirModalUser = function(id) {
+    const u = window._todosUsuarios.find(x => x.id === id);
+    if (!u) return;
+    window._usuarioActivo = u;
+
+    document.getElementById('mu-avatar').textContent = u.name.charAt(0).toUpperCase();
+    document.getElementById('mu-nombre').textContent = u.name;
+    document.getElementById('mu-email').textContent  = u.email;
+    document.getElementById('mu-fecha').textContent  = u.created_at ? new Date(u.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' }) : '—';
+
+    const rolEl = document.getElementById('mu-rol');
+    rolEl.className = 'badge ' + (u.role === 'superadmin' ? 'role-super' : u.role === 'bar_admin' ? 'role-bar' : 'role-cli');
+    rolEl.textContent = u.role === 'superadmin' ? 'Super Admin' : u.role === 'bar_admin' ? 'Bar Admin' : 'Cliente';
+
+    const verifEl = document.getElementById('mu-verif');
+    verifEl.className = 'badge ' + (u.email_verified_at ? 'verif-yes' : 'verif-no');
+    verifEl.textContent = u.email_verified_at ? '✓ Verificado' : '✗ No verificado';
+
+    const barWrap = document.getElementById('mu-bar-wrap');
+    if (u.bar) {
+      barWrap.style.display = 'block';
+      document.getElementById('mu-bar').textContent = u.bar.nombre;
+    } else {
+      barWrap.style.display = 'none';
+    }
+
+    document.getElementById('mu-nuevo-rol').value = u.role;
+    document.getElementById('modal-usuario').style.display = 'flex';
+  };
+
+  window.cambiarRolUsuario = async function() {
+    const u = window._usuarioActivo;
+    if (!u) return;
+    const nuevoRol = document.getElementById('mu-nuevo-rol').value;
+    try {
+      await api.usuarios.update(u.id, { role: nuevoRol });
+      toast('Rol actualizado', 'success');
+      cerrarModalUser();
+      loadStats();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  window.eliminarUsuario = async function() {
+    const u = window._usuarioActivo;
+    if (!u) return;
+    if (!confirm(`¿Eliminar a ${u.name}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await api.usuarios.delete(u.id);
+      toast('Usuario eliminado', 'info');
+      cerrarModalUser();
+      loadStats();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  // ── Estadísticas Python ──────────────────────────────────────
+  let _statsLoaded = false;
+  window.cargarEstadisticasPython = async function() {
+    if (_statsLoaded) return;
+    _statsLoaded = true;
+    try {
+      const res = await fetch('/stats/app');
+      if (!res.ok) throw new Error('Servicio Python no disponible');
+      const d = await res.json();
+
+      const t  = d.totales;
+      const cr = d.crecimiento;
+      const rv = d.reservas;
+
+      // ── Fila 1: Reservas ────────────────────────────────────
+      document.getElementById('py-total-res').textContent  = t.reservas;
+      document.getElementById('py-mes-actual').textContent = rv.mes_actual;
+      document.getElementById('py-tasa').textContent       = rv.tasa_confirmacion + '%';
+      document.getElementById('py-lead').textContent       = rv.lead_time_dias + ' d';
+
+      const varMes = rv.variacion_mes;
+      const varEl  = document.getElementById('py-var-mes');
+      varEl.textContent = varMes > 0 ? `+${varMes} vs mes anterior` : varMes < 0 ? `${varMes} vs mes anterior` : 'igual que el mes anterior';
+      varEl.style.color = varMes > 0 ? '#065f46' : varMes < 0 ? '#991b1b' : '#6b7280';
+
+      const varMesTxt = document.getElementById('py-mes-var-txt');
+      if (varMesTxt) {
+        varMesTxt.textContent = varMes > 0 ? `↑ ${varMes} más que el mes anterior` : varMes < 0 ? `↓ ${Math.abs(varMes)} menos que el mes anterior` : 'Igual que el mes anterior';
+        varMesTxt.style.color = varMes > 0 ? '#065f46' : varMes < 0 ? '#991b1b' : '#6b7280';
+      }
+
+      // ── Fila 2: SaaS ────────────────────────────────────────
+      document.getElementById('py-nuevos-users').textContent  = cr.nuevos_usuarios_mes;
+      document.getElementById('py-activacion').textContent    = cr.tasa_activacion + '%';
+      document.getElementById('py-retencion').textContent     = cr.tasa_retencion + '%';
+      document.getElementById('py-bares-inactivos').textContent = t.bares_sin_reservas;
+
+      const varNuevos = cr.variacion_usuarios;
+      const varNuevosEl = document.getElementById('py-nuevos-var');
+      if (varNuevosEl) {
+        varNuevosEl.textContent = varNuevos > 0 ? `+${varNuevos} vs mes anterior` : varNuevos < 0 ? `${varNuevos} vs mes anterior` : 'Igual que el mes anterior';
+        varNuevosEl.style.color = varNuevos > 0 ? '#065f46' : varNuevos < 0 ? '#991b1b' : '#6b7280';
+      }
+
+      // ── Helper: mini bar chart ───────────────────────────────
+      function miniChart(containerId, rows, keyX, keyY, color, labelFn) {
+        const wrap = document.getElementById(containerId);
+        if (!wrap) return;
+        if (!rows || rows.length === 0) { wrap.innerHTML = '<p class="text-xs text-gray-400 self-center">Sin datos</p>'; return; }
+        const maxVal = Math.max(...rows.map(r => r[keyY]), 1);
+        wrap.innerHTML = rows.map(r => `
+          <div class="chart-col">
+            <div class="chart-fill" style="height:${Math.round(r[keyY]/maxVal*100)}%;background:${color};opacity:0.8;" title="${labelFn(r)}: ${r[keyY]}"></div>
+            <span class="chart-lbl">${labelFn(r)}</span>
+          </div>
+        `).join('');
+      }
+
+      // ── Gráfico: tendencia reservas (6 meses) ───────────────
+      miniChart('py-chart-tendencia', d.tendencia, 'mes', 'total', 'var(--steel)', r => r.mes?.slice(5) ?? '');
+
+      // ── Gráfico: crecimiento usuarios (8 meses) ─────────────
+      miniChart('py-chart-usuarios', d.crecimiento_usuarios, 'mes', 'total', '#8b5cf6', r => r.mes?.slice(5) ?? '');
+
+      // ── Gráfico: días de la semana ───────────────────────────
+      const diasCortos = { Monday:'Lun', Tuesday:'Mar', Wednesday:'Mié', Thursday:'Jue', Friday:'Vie', Saturday:'Sáb', Sunday:'Dom' };
+      miniChart('py-chart-dias', d.por_dia_semana, 'dia', 'total', '#f59e0b', r => diasCortos[r.dia] ?? r.dia?.slice(0,3) ?? '');
+
+      // ── Gráfico: horas pico ──────────────────────────────────
+      miniChart('py-chart-horas', d.por_hora, 'hora', 'total', '#10b981', r => r.hora + 'h');
+
+      // ── Top ciudades ─────────────────────────────────────────
+      const maxCiudad = Math.max(...(d.top_ciudades ?? []).map(c => c.total), 1);
+      document.getElementById('py-ciudades').innerHTML = (d.top_ciudades ?? []).map(c => `
+        <div>
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-medium">${c.ciudad || 'Desconocida'}</span>
+            <span class="font-bold text-gray-500">${c.total}</span>
+          </div>
+          <div style="background:#f3f4f6;border-radius:999px;height:5px;">
+            <div style="width:${Math.round(c.total/maxCiudad*100)}%;background:var(--sand);height:5px;border-radius:999px;transition:width 0.6s ease;"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // ── Top bares ────────────────────────────────────────────
+      const maxBar = Math.max(...(d.top_bares ?? []).map(b => b.total), 1);
+      document.getElementById('py-top-bares').innerHTML = (d.top_bares ?? []).map(b => `
+        <div>
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-medium">${b.nombre}</span>
+            <span class="text-gray-400">${b.confirmadas ?? 0} conf. / <strong>${b.total}</strong></span>
+          </div>
+          <div style="background:#f3f4f6;border-radius:999px;height:6px;">
+            <div class="bar-stat-bar" style="width:${Math.round(b.total/maxBar*100)}%;"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // ── Estado global ────────────────────────────────────────
+      const estados = [
+        { key:'confirmada', label:'Confirmadas', color:'#065f46', bg:'#d1fae5' },
+        { key:'pendiente',  label:'Pendientes',  color:'#92400e', bg:'#fef3c7' },
+        { key:'cancelada',  label:'Canceladas',  color:'#6b7280', bg:'#f3f4f6' },
+        { key:'rechazada',  label:'Rechazadas',  color:'#991b1b', bg:'#fee2e2' },
+      ];
+      const totalEst = t.reservas || 1;
+      document.getElementById('py-estados').innerHTML = estados.map(({ key, label, color, bg }) => {
+        const val = d.por_estado[key] ?? 0;
+        return `
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="font-medium">${label}</span>
+              <span class="font-bold" style="color:${color};">${val}</span>
+            </div>
+            <div style="background:${bg};border-radius:999px;height:6px;">
+              <div style="width:${Math.round(val/totalEst*100)}%;background:${color};height:6px;border-radius:999px;transition:width 0.6s ease;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // ── Bares con más rechazos ────────────────────────────────
+      document.getElementById('py-rechazos').innerHTML = (d.tasa_rechazo ?? []).length === 0
+        ? '<p class="text-xs text-gray-400">Sin datos suficientes</p>'
+        : (d.tasa_rechazo ?? []).map(b => `
+          <div class="flex justify-between items-center text-sm">
+            <span class="font-medium truncate" style="max-width:60%;">${b.nombre}</span>
+            <span class="font-bold" style="color:#991b1b;">${b.tasa_rechazo}%</span>
+          </div>
+        `).join('');
+
+    } catch (e) {
+      document.getElementById('py-kpis').innerHTML = `<div class="col-span-4 text-center text-gray-400 py-8 text-sm">${e.message}</div>`;
+    }
+  };
+
+  loadStats();
+</script>
+
+<script type="module" src="/assets/js/pages/admin.js"></script>
+
+<!-- Google Places -->
+<script>
+  const MAPS_KEY = 'AIzaSyAJ446VxneqgPIzM0aSAEhTGZlU7_6MU8w';
+  let _placesLoaded = false;
+
+  window.cargarGooglePlaces = function() {
+    if (_placesLoaded) return;
+    _placesLoaded = true;
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places&callback=initAdminPlaces&language=es&region=es`;
+    s.async = true; s.defer = true;
+    document.head.appendChild(s);
+  };
+
+  window.initAdminPlaces = function() {
+    const input = document.getElementById('bar-nombre');
+    if (!input || !window.google) return;
+    const ac = new google.maps.places.Autocomplete(input, {
+      types: ['establishment'],
+      componentRestrictions: { country: 'es' },
+      fields: ['name','place_id','formatted_address','address_components','formatted_phone_number','rating','photos'],
+    });
+    ac.addListener('place_changed', () => {
+      const p = ac.getPlace();
+      if (!p.place_id) return;
+      let calle = '', ciudad = '', numero = '';
+      (p.address_components || []).forEach(c => {
+        if (c.types.includes('route'))         calle  = c.long_name;
+        if (c.types.includes('street_number')) numero = c.long_name;
+        if (c.types.includes('locality'))      ciudad = c.long_name;
+      });
+      const direccion = numero ? `${calle}, ${numero}` : calle || p.formatted_address?.split(',')[0] || '';
+      document.getElementById('bar-nombre').value    = p.name || '';
+      document.getElementById('bar-place-id').value  = p.place_id;
+      document.getElementById('bar-direccion').value = direccion;
+      document.getElementById('bar-ciudad').value    = ciudad;
+      if (p.formatted_phone_number) document.getElementById('bar-telefono').value = p.formatted_phone_number;
+      const preview = document.getElementById('place-preview');
+      document.getElementById('place-name-preview').textContent = p.name;
+      document.getElementById('place-addr-preview').textContent = p.formatted_address || '';
+      if (p.rating) {
+        document.getElementById('place-rating-stars').textContent = '★'.repeat(Math.round(p.rating)) + '☆'.repeat(5 - Math.round(p.rating));
+        document.getElementById('place-rating-num').textContent   = p.rating.toFixed(1);
+      }
+      if (p.photos?.length) document.getElementById('place-photo').src = p.photos[0].getUrl({ maxWidth: 128 });
+      preview.style.display = 'flex';
+    });
+  };
+</script>
+</body>
+</html>

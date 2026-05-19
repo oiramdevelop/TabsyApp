@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tabsy — Reserva tu mesa en el bar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --navy:#0f2240; --blue:#1a3a6b; --steel:#4a6fa5; --sand:#c9a96e; --cream:#f5f0e8; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',sans-serif; background:var(--cream); color:var(--navy); overflow-x:hidden; }
+    h1,h2,h3 { font-family:'Playfair Display',serif; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px);} to{opacity:1;transform:translateY(0);} }
+    @keyframes shimmer { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
+
+    /* ── NAV ── */
+    .main-nav {
+      position:fixed;top:0;left:0;right:0;z-index:1000;
+      background:rgba(15,34,64,0.97);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(201,169,110,0.18);
+      box-shadow:0 2px 30px rgba(15,34,64,0.4);
+      height:80px;display:flex;align-items:center;
+    }
+    .nav-inner {
+      max-width:1280px;width:100%;margin:0 auto;padding:0 2rem;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .nav-link {
+      font-size:0.875rem;font-weight:500;color:rgba(255,255,255,0.62);
+      text-decoration:none;letter-spacing:0.01em;
+      padding-bottom:3px;border-bottom:2px solid transparent;transition:all 0.15s;
+    }
+    .nav-link:hover { color:white;border-bottom-color:var(--sand); }
+
+    /* ── CAROUSEL ── */
+    .carousel-section {
+      position:relative;height:calc(100vh - 80px);
+      min-height:480px;max-height:820px;
+      overflow:hidden;margin-top:80px;
+    }
+    .carousel-track {
+      display:flex;height:100%;
+      transition:transform 0.75s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .carousel-slide {
+      min-width:100%;height:100%;position:relative;
+      overflow:hidden;background:var(--navy);
+    }
+    .carousel-img {
+      position:absolute;inset:0;width:100%;height:100%;
+      object-fit:cover;opacity:0.42;
+    }
+    .carousel-overlay {
+      position:absolute;inset:0;
+      background:linear-gradient(110deg,rgba(15,34,64,0.92) 0%,rgba(15,34,64,0.55) 55%,rgba(15,34,64,0.1) 100%);
+      display:flex;align-items:center;
+    }
+    .carousel-content {
+      max-width:1280px;width:100%;margin:0 auto;padding:0 2.5rem;
+      animation:fadeUp 0.6s ease both;
+    }
+    .c-eyebrow {
+      display:inline-block;font-size:0.72rem;font-weight:700;
+      letter-spacing:0.14em;text-transform:uppercase;color:var(--sand);margin-bottom:16px;
+    }
+    .c-title {
+      font-size:clamp(2.2rem,5.5vw,4.8rem);font-weight:900;
+      color:white;line-height:1.04;letter-spacing:-0.03em;margin-bottom:18px;
+    }
+    .c-sub {
+      font-size:1.05rem;color:rgba(255,255,255,0.58);
+      margin-bottom:36px;max-width:500px;line-height:1.65;
+    }
+    .c-btn {
+      display:inline-flex;align-items:center;gap:8px;
+      background:linear-gradient(135deg,var(--sand),#b8924a);
+      color:white;font-weight:700;font-size:0.95rem;
+      padding:14px 30px;border-radius:12px;border:none;
+      cursor:pointer;text-decoration:none;letter-spacing:0.01em;
+      box-shadow:0 6px 24px rgba(201,169,110,0.35);transition:all 0.2s;
+    }
+    .c-btn:hover { transform:translateY(-2px);box-shadow:0 10px 32px rgba(201,169,110,0.48); }
+    .carousel-arrow {
+      position:absolute;top:50%;transform:translateY(-50%);
+      width:50px;height:50px;border-radius:50%;
+      background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,0.2);color:white;
+      font-size:1.5rem;cursor:pointer;transition:all 0.2s;
+      display:flex;align-items:center;justify-content:center;z-index:10;
+    }
+    .carousel-arrow:hover { background:rgba(255,255,255,0.22); }
+    .carousel-prev { left:22px; }
+    .carousel-next { right:22px; }
+    .carousel-dots {
+      position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+      display:flex;gap:8px;z-index:10;
+    }
+    .c-dot {
+      width:8px;height:8px;border-radius:999px;
+      background:rgba(255,255,255,0.3);border:none;cursor:pointer;
+      transition:all 0.3s;padding:0;
+    }
+    .c-dot.active { width:30px;background:var(--sand); }
+    .c-counter {
+      position:absolute;bottom:32px;right:28px;
+      font-size:0.72rem;font-weight:600;letter-spacing:0.06em;
+      color:rgba(255,255,255,0.35);z-index:10;
+    }
+
+    /* ── SEARCH STRIP ── */
+    .search-strip {
+      background:white;border-bottom:1px solid rgba(15,34,64,0.08);
+      position:sticky;top:80px;z-index:50;
+      box-shadow:0 4px 20px rgba(15,34,64,0.05);
+    }
+    .search-inner {
+      max-width:1280px;margin:0 auto;padding:16px 2rem;
+      display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+    }
+    .search-wrap { position:relative;flex:1;min-width:200px;max-width:480px; }
+    .search-icon { position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:0.9rem;pointer-events:none; }
+    .search-input {
+      width:100%;background:var(--cream);
+      border:1.5px solid rgba(15,34,64,0.1);border-radius:12px;
+      padding:11px 16px 11px 40px;
+      font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--navy);
+      transition:all 0.2s;
+    }
+    .search-input:focus { outline:none;border-color:var(--steel);background:white;box-shadow:0 0 0 3px rgba(74,111,165,0.1); }
+    .search-input::placeholder { color:rgba(15,34,64,0.35); }
+    .stats-row { display:flex;gap:28px;align-items:center;margin-left:auto; }
+    .stat-item { text-align:center; }
+    .stat-n { font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;color:var(--navy); }
+    .stat-l { font-size:0.68rem;color:rgba(15,34,64,0.42);font-weight:600;letter-spacing:0.07em;text-transform:uppercase; }
+    .stat-div { width:1px;height:34px;background:rgba(15,34,64,0.1); }
+
+    /* ── BARS SECTION ── */
+    .section-main { max-width:1280px;margin:0 auto;padding:64px 2rem; }
+    .section-eyebrow {
+      display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--sand);margin-bottom:10px;
+    }
+    .section-title { font-size:2.4rem;font-weight:900;letter-spacing:-0.02em;margin-bottom:0; }
+
+    /* ── BAR CARD ── */
+    .bar-card {
+      background:white;border-radius:22px;overflow:hidden;
+      border:1px solid rgba(15,34,64,0.07);
+      transition:transform 0.28s ease,box-shadow 0.28s ease;
+      display:flex;flex-direction:column;
+    }
+    .bar-card:hover { transform:translateY(-6px);box-shadow:0 20px 55px rgba(15,34,64,0.13); }
+    .bar-thumb {
+      height:185px;background:linear-gradient(135deg,var(--navy),#2d5a8e);
+      display:flex;align-items:center;justify-content:center;
+      font-size:3rem;overflow:hidden;flex-shrink:0;position:relative;
+    }
+    .bar-thumb img { width:100%;height:100%;object-fit:cover; }
+    .horario-pill {
+      position:absolute;top:12px;right:12px;font-size:0.7rem;font-weight:700;
+      letter-spacing:0.04em;padding:4px 10px;border-radius:999px;
+      background:rgba(15,34,64,0.72);backdrop-filter:blur(8px);color:white;
+    }
+    .btn-reservar {
+      background:linear-gradient(135deg,var(--navy),var(--blue));
+      color:white;border:none;border-radius:10px;padding:11px;
+      font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;
+      cursor:pointer;transition:all 0.2s;width:100%;letter-spacing:0.01em;
+    }
+    .btn-reservar:hover { box-shadow:0 6px 20px rgba(15,34,64,0.3);transform:translateY(-1px); }
+
+    /* ── SKELETON ── */
+    .skeleton {
+      background:linear-gradient(90deg,#e2ddd6 25%,#ede8e0 50%,#e2ddd6 75%);
+      background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:22px;
+    }
+
+    /* ── FEATURES ── */
+    .features-bg {
+      background:var(--navy);
+      background-image:repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(201,169,110,0.025) 30px,rgba(201,169,110,0.025) 60px);
+      padding:80px 2rem;
+    }
+    .feature-card {
+      padding:36px 30px;border-radius:20px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.07);
+      transition:background 0.2s,transform 0.2s;
+    }
+    .feature-card:hover { background:rgba(255,255,255,0.08);transform:translateY(-3px); }
+    .feature-num { font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:900;color:var(--sand);opacity:0.65;line-height:1;margin-bottom:14px; }
+
+    /* ── FOOTER ── */
+    footer { background:#07101e;border-top:1px solid rgba(201,169,110,0.15); }
+    .footer-inner { max-width:1280px;margin:0 auto;padding:64px 2rem 40px; }
+    .footer-grid { display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px; }
+    @media(max-width:768px) { .footer-grid { grid-template-columns:1fr 1fr;gap:32px; } }
+    @media(max-width:480px) { .footer-grid { grid-template-columns:1fr;gap:28px; } }
+    .footer-col-title { font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--sand);margin-bottom:16px; }
+    .footer-link { display:block;font-size:0.85rem;color:rgba(255,255,255,0.42);text-decoration:none;margin-bottom:10px;transition:color 0.15s; }
+    .footer-link:hover { color:rgba(255,255,255,0.85); }
+    .footer-bottom { border-top:1px solid rgba(255,255,255,0.06);margin-top:48px;padding-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+    .footer-badge { display:inline-flex;align-items:center;gap:6px;background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.2);border-radius:999px;padding:5px 14px;font-size:0.72rem;font-weight:600;color:var(--sand);text-decoration:none; }
+
+    /* ── MOBILE NAV ── */
+    .nav-hamburger {
+      display:none;flex-direction:column;gap:5px;
+      background:none;border:none;cursor:pointer;padding:8px;
+    }
+    .nav-hamburger span {
+      width:22px;height:2.5px;background:white;border-radius:2px;
+      transition:transform 0.3s ease,opacity 0.3s ease;
+      display:block;
+    }
+    .nav-hamburger.open span:nth-child(1) { transform:rotate(45deg) translate(5px,5px); }
+    .nav-hamburger.open span:nth-child(2) { opacity:0; }
+    .nav-hamburger.open span:nth-child(3) { transform:rotate(-45deg) translate(5px,-5px); }
+    .mobile-menu {
+      display:none;position:fixed;top:80px;left:0;right:0;z-index:998;
+      background:rgba(10,26,53,0.99);backdrop-filter:blur(24px);
+      padding:20px 24px 28px;border-bottom:1px solid rgba(201,169,110,0.15);
+      flex-direction:column;gap:10px;
+    }
+    .mobile-menu.open { display:flex; }
+    @media(max-width:768px) {
+      #nav-right { display:none !important; }
+      .nav-hamburger { display:flex; }
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      background:linear-gradient(120deg,#07101e 0%,#0f2240 50%,#1a3a6b 100%);
+      padding:96px 2rem;text-align:center;position:relative;overflow:hidden;
+    }
+    .cta-section::before {
+      content:'';position:absolute;width:700px;height:700px;border-radius:50%;
+      background:radial-gradient(circle,rgba(201,169,110,0.08) 0%,transparent 65%);
+      top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+    }
+    .cta-pill {
+      display:inline-block;font-size:0.7rem;font-weight:700;letter-spacing:0.14em;
+      text-transform:uppercase;color:var(--sand);margin-bottom:20px;
+      border:1px solid rgba(201,169,110,0.3);padding:5px 18px;border-radius:999px;
+    }
+    .cta-title {
+      font-size:clamp(2rem,4.5vw,3.1rem);font-weight:900;color:white;
+      line-height:1.1;letter-spacing:-0.025em;margin-bottom:18px;
+    }
+    .cta-sub {
+      color:rgba(255,255,255,0.48);font-size:1rem;margin-bottom:38px;line-height:1.8;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity:0;transform:translateY(32px);
+      transition:opacity 0.7s ease,transform 0.7s ease;
+    }
+    .reveal.visible { opacity:1;transform:translateY(0); }
+    .reveal-d1 { transition-delay:0.1s; }
+    .reveal-d2 { transition-delay:0.22s; }
+    .reveal-d3 { transition-delay:0.34s; }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<header class="main-nav">
+  <div class="nav-inner">
+    <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;" style="display:flex;align-items:center;text-decoration:none;">
+      <img src="/assets/images/logo2-2.png" alt="Tabsy"
+           style="height:100px;width:auto;" />
+    </a>
+    <div id="nav-right" style="display:flex;align-items:center;gap:20px;">
+      <a href="#seccion-bares" class="nav-link">Explorar bares</a>
+      <a href="/pages/auth/login.html"
+         style="background:linear-gradient(135deg,#c9a96e,#b8924a);color:white;padding:10px 22px;border-radius:10px;font-weight:600;font-size:0.875rem;text-decoration:none;box-shadow:0 3px 14px rgba(201,169,110,0.28);letter-spacing:0.01em;">
+        Iniciar sesión
+      </a>
+    </div>
+    <button class="nav-hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ══ MOBILE MENU ══ -->
+<nav class="mobile-menu" id="mobile-menu">
+  <a href="#seccion-bares" style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.75);text-decoration:none;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07);display:block;">Explorar bares</a>
+  <a href="/pages/auth/login.html" style="display:block;background:linear-gradient(135deg,#c9a96e,#b8924a);color:white;padding:14px 22px;border-radius:12px;font-weight:700;font-size:0.95rem;text-decoration:none;text-align:center;margin-top:6px;box-shadow:0 4px 16px rgba(201,169,110,0.3);">Iniciar sesión →</a>
+</nav>
+
+<!-- ══ CAROUSEL ══ -->
+<section class="carousel-section">
+  <div class="carousel-track" id="carousel-track">
+    <div class="carousel-slide" style="background:linear-gradient(135deg,#0f2240,#1a3a6b);">
+      <div class="carousel-overlay">
+        <div class="carousel-content">
+          <img src="/assets/images/logo2.png" alt="Tabsy"
+               style="height:130px;width:auto;margin-bottom:20px;display:block;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.4));" />
+          <span class="c-eyebrow">Tabsy · Reservas de bar</span>
+          <h1 class="c-title">El bar te espera.<br/><span style="color:var(--sand);">Tú decide cuándo.</span></h1>
+          <p class="c-sub">Reserva mesa en los mejores bares sin llamar, sin esperar.</p>
+          <a href="#seccion-bares" class="c-btn">Explorar bares →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="carousel-arrow carousel-prev" onclick="cMove(-1)">‹</button>
+  <button class="carousel-arrow carousel-next" onclick="cMove(1)">›</button>
+  <div class="carousel-dots" id="carousel-dots"><button class="c-dot active"></button></div>
+  <span class="c-counter" id="c-counter">1 / 1</span>
+</section>
+
+<!-- ══ SEARCH STRIP ══ -->
+<div class="search-strip">
+  <div class="search-inner">
+    <div class="search-wrap">
+      <span class="search-icon" style="opacity:0.35;font-size:0.85rem;letter-spacing:-1px;">○—</span>
+      <input id="search-bares" type="text" class="search-input" placeholder="Buscar bar por nombre o ciudad..." />
+    </div>
+    <div class="stats-row">
+      <div class="stat-item"><div class="stat-n" id="stat-bares">—</div><div class="stat-l">Bares</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-item"><div class="stat-n" id="stat-ciudades">—</div><div class="stat-l">Ciudades</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-item"><div class="stat-n">30s</div><div class="stat-l">Para reservar</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BARES ══ -->
+<section id="seccion-bares" class="section-main">
+  <div class="reveal" style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;">
+    <div>
+      <span class="section-eyebrow">Descubre</span>
+      <h2 class="section-title">Bares disponibles</h2>
+    </div>
+  </div>
+  <div id="lista-bares" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="skeleton h-72"></div>
+    <div class="skeleton h-72"></div>
+    <div class="skeleton h-72"></div>
+  </div>
+</section>
+
+<!-- ══ FEATURES ══ -->
+<section class="features-bg">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:56px;">
+      <span class="section-eyebrow" style="color:var(--sand);">Por qué Tabsy</span>
+      <h2 style="font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:900;color:white;letter-spacing:-0.02em;">
+        La forma más fácil<br/>de reservar una mesa
+      </h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6 text-white">
+      <div class="feature-card reveal">
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:18px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:10px;">Reserva en 30 segundos</h3>
+        <p style="color:rgba(255,255,255,0.42);font-size:0.88rem;line-height:1.7;">Sin llamadas, sin esperas. Elige tu mesa, hora y listo.</p>
+      </div>
+      <div class="feature-card reveal reveal-d1">
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:18px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:10px;">Los mejores bares</h3>
+        <p style="color:rgba(255,255,255,0.42);font-size:0.88rem;line-height:1.7;">Explora bares con las mejores valoraciones en Google, cerca de ti.</p>
+      </div>
+      <div class="feature-card reveal reveal-d2">
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:18px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:10px;">Confirmación inmediata</h3>
+        <p style="color:rgba(255,255,255,0.42);font-size:0.88rem;line-height:1.7;">El bar confirma tu reserva y tú recibes el aviso al instante.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+
+      <!-- Columna 1: Marca -->
+      <div>
+        <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;" style="display:inline-block;margin-bottom:18px;">
+          <img src="/assets/images/logo2-2.png" alt="Tabsy" style="height:64px;width:auto;opacity:0.9;" />
+        </a>
+        <p style="font-size:0.85rem;color:rgba(255,255,255,0.38);line-height:1.7;max-width:240px;">
+          Reserva tu mesa en los mejores bares sin llamar, sin esperar. Simple, rápido y gratuito.
+        </p>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <!-- Instagram -->
+          <a href="#" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);transition:all 0.2s;text-decoration:none;"
+             onmouseover="this.style.background='rgba(201,169,110,0.15)';this.style.color='#c9a96e'"
+             onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.45)'">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+          <!-- Twitter/X -->
+          <a href="#" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);transition:all 0.2s;text-decoration:none;"
+             onmouseover="this.style.background='rgba(201,169,110,0.15)';this.style.color='#c9a96e'"
+             onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.45)'">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <!-- LinkedIn -->
+          <a href="#" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);transition:all 0.2s;text-decoration:none;"
+             onmouseover="this.style.background='rgba(201,169,110,0.15)';this.style.color='#c9a96e'"
+             onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.45)'">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Columna 2: Producto -->
+      <div>
+        <p class="footer-col-title">Producto</p>
+        <a href="#seccion-bares" class="footer-link">Explorar bares</a>
+        <a href="/pages/auth/login.html" class="footer-link">Iniciar sesión</a>
+        <a href="/pages/auth/login.html" class="footer-link">Crear cuenta</a>
+        <a href="#" class="footer-link">¿Cómo funciona?</a>
+      </div>
+
+      <!-- Columna 3: Negocios -->
+      <div>
+        <p class="footer-col-title">Para bares</p>
+        <a href="/pages/auth/login.html" class="footer-link">Panel de gestión</a>
+        <a href="/pages/auth/login.html" class="footer-link">Estadísticas</a>
+        <a href="/pages/auth/login.html" class="footer-link">Gestión de mesas</a>
+        <a href="/pages/auth/login.html" class="footer-link">Notificaciones</a>
+      </div>
+
+      <!-- Columna 4: Legal -->
+      <div>
+        <p class="footer-col-title">Legal</p>
+        <a href="#" class="footer-link">Términos de uso</a>
+        <a href="#" class="footer-link">Política de privacidad</a>
+        <a href="#" class="footer-link">Cookies</a>
+        <a href="#" class="footer-link">Contacto</a>
+      </div>
+
+    </div>
+
+    <!-- Footer bottom -->
+    <div class="footer-bottom">
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.2);">
+        &copy; 2026 Tabsy · Elevio Studio · Todos los derechos reservados
+      </p>
+      
+    </div>
+  </div>
+</footer>
+
+<div id="tabsy-loader"></div>
+
+<!-- ══ CAROUSEL JS ══ -->
+<script>
+  let _ci = 0, _ct = 1, _ctimer = null;
+
+  const STATIC_SLIDES = [
+    {
+      bg: 'linear-gradient(135deg,#0f2240,#1a3a6b)',
+      img: '/assets/images/bar1-carrusel-inicio.jpg',
+      eyebrow: 'Tabsy · Reservas de bar',
+      title: 'El bar te espera.<br/><span style="color:#c9a96e;">Tú decide cuándo.</span>',
+      sub: 'Reserva mesa en los mejores bares sin llamar, sin esperar.',
+      cta: 'Empezar ahora →'
+    },
+    {
+      bg: 'linear-gradient(135deg,#1a3a6b,#2e5fa0)',
+      img: '/assets/images/bar2-carrusel-inicio.jpg',
+      eyebrow: 'Rápido y sencillo',
+      title: 'Reserva en <span style="color:#c9a96e;">30 segundos</span>',
+      sub: 'Sin llamadas ni colas. Solo tú, tu mesa favorita y tus amigos.',
+      cta: 'Crear cuenta gratis →'
+    },
+    {
+      bg: 'linear-gradient(135deg,#3d2a00,#0f2240)',
+      img: '/assets/images/bar3-carrusel-inicio.jpg',
+      eyebrow: 'Google Places integrado',
+      title: 'Los bares mejor <span style="color:#c9a96e;">valorados</span>',
+      sub: 'Descubre los bares con mejores reseñas de Google cerca de tu ubicación.',
+      cta: 'Explorar bares →',
+      href: '#seccion-bares',
+    },
+    {
+      bg: 'linear-gradient(135deg,#0f2240,#2a1a00)',
+      img: '/assets/images/bar4-carrusel-inicio.jpg',
+      eyebrow: 'Tu experiencia, tu mesa',
+      title: 'Elige dónde <span style="color:#c9a96e;">disfrutar</span>',
+      sub: 'Filtra por ciudad, valoraciones y disponibilidad en tiempo real.',
+      cta: 'Ver bares →',
+      href: '#seccion-bares',
+    },
+  ];
+
+  function cGoto(n) {
+    _ci = ((n % _ct) + _ct) % _ct;
+    document.getElementById('carousel-track').style.transform = `translateX(-${_ci * 100}%)`;
+    document.querySelectorAll('.c-dot').forEach((d, i) => d.classList.toggle('active', i === _ci));
+    document.getElementById('c-counter').textContent = `${_ci + 1} / ${_ct}`;
+  }
+
+  function cMove(dir) {
+    clearInterval(_ctimer);
+    cGoto(_ci + dir);
+    _ctimer = setInterval(() => cGoto(_ci + 1), 5500);
+  }
+
+  function cClick(n) { clearInterval(_ctimer); cGoto(n); _ctimer = setInterval(() => cGoto(_ci + 1), 5500); }
+
+  function buildCarousel(bares) {
+    const slides = bares.filter(b => b.imagen || b.descripcion).slice(0, 5);
+    const src = slides.length >= 2
+      ? slides.map(b => ({
+          bg: 'linear-gradient(135deg,#0f2240,#1a3a6b)',
+          img: b.imagen || null,
+          eyebrow: `${b.ciudad || 'Tabsy'} · Reservas`,
+          title: b.nombre,
+          sub: b.descripcion ? b.descripcion.slice(0, 90) + (b.descripcion.length > 90 ? '…' : '') : 'Reserva tu mesa ahora',
+          cta: 'Reservar mesa →',
+          onclick: `window.abrirReservaGuest(${b.id}, ${JSON.stringify(b.nombre).replace(/"/g, '&quot;')})`,
+        }))
+      : STATIC_SLIDES;
+
+    _ct = src.length; _ci = 0;
+
+    document.getElementById('carousel-track').style.transform = 'translateX(0)';
+    document.getElementById('carousel-track').innerHTML = src.map(s => `
+      <div class="carousel-slide" style="background:${s.bg};">
+        ${s.img ? `<img src="${s.img}" alt="${s.title}" class="carousel-img" />` : ''}
+        <div class="carousel-overlay">
+          <div class="carousel-content">
+            <img src="/assets/images/logo2.png" alt="Tabsy" style="height:300px;width:auto;margin-bottom:20px;display:block;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.4));" />
+            <span class="c-eyebrow">${s.eyebrow}</span>
+            <h2 class="c-title">${s.title}</h2>
+            <p class="c-sub">${s.sub}</p>
+            <a ${s.onclick ? `onclick="${s.onclick}" href="javascript:void(0)"` : `href="${s.href || '#seccion-bares'}"`} class="c-btn">${s.cta}</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('carousel-dots').innerHTML = src.map((_, i) =>
+      `<button class="c-dot ${i === 0 ? 'active' : ''}" onclick="cClick(${i})"></button>`
+    ).join('');
+    document.getElementById('c-counter').textContent = `1 / ${_ct}`;
+
+    clearInterval(_ctimer);
+    _ctimer = setInterval(() => cGoto(_ci + 1), 5500);
+  }
+
+  // Scroll reveal via IntersectionObserver
+  window.initReveal = function() {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => obs.observe(el));
+  };
+  document.addEventListener('DOMContentLoaded', window.initReveal);
+
+  function animateCount(el, target, delay) {
+    setTimeout(() => {
+      const dur = 900, t0 = performance.now();
+      const step = ts => {
+        const p = Math.min((ts - t0) / dur, 1);
+        el.textContent = Math.round(p * target);
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = target;
+      };
+      requestAnimationFrame(step);
+    }, delay || 0);
+  }
+
+  window.onBarsLoaded = function(bares) {
+    buildCarousel(bares);
+    const ciudades = new Set(bares.map(b => b.ciudad).filter(Boolean)).size;
+    animateCount(document.getElementById('stat-bares'), bares.length, 0);
+    animateCount(document.getElementById('stat-ciudades'), ciudades, 180);
+    window.initReveal();
+  };
+
+  function toggleMobileMenu() {
+    document.getElementById('mobile-menu').classList.toggle('open');
+    document.getElementById('hamburger').classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('mobile-menu');
+    const btn  = document.getElementById('hamburger');
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+      menu.classList.remove('open');
+      btn.classList.remove('open');
+    }
+  });
+
+  // Iniciar carousel con slides estáticos mientras carga
+  buildCarousel([]);
+</script>
+
+<script type="module" src="/assets/js/pages/landing.js"></script>
+
+<!-- ══ MODAL RESERVA INVITADO ══ -->
+<div id="modal-guest" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(10,20,40,0.65);backdrop-filter:blur(6px);overflow-y:auto;padding:24px 16px;">
+  <div style="max-width:520px;margin:40px auto;background:white;border-radius:24px;box-shadow:0 24px 80px rgba(15,34,64,0.25);overflow:hidden;">
+
+    <!-- Cabecera -->
+    <div style="background:linear-gradient(135deg,#0f2240,#1a3a6b);padding:28px 32px 24px;position:relative;">
+      <button onclick="cerrarReservaGuest()" style="position:absolute;top:18px;right:20px;background:rgba(255,255,255,0.1);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px;">Reservar mesa</p>
+      <h2 id="modal-bar-nombre" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:800;color:white;margin:0;"></h2>
+    </div>
+
+    <!-- Formulario -->
+    <form id="form-guest" style="padding:28px 32px;display:flex;flex-direction:column;gap:16px;">
+      <input type="hidden" id="g-bar-id" />
+
+      <!-- Datos personales -->
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;color:#0f2240;opacity:0.5;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Nombre completo</label>
+        <input id="g-nombre" type="text" placeholder="María García" required style="width:100%;border:1.5px solid rgba(15,34,64,0.12);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:0.9rem;color:#0f2240;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;color:#0f2240;opacity:0.5;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Correo electrónico</label>
+        <input id="g-email" type="email" placeholder="maria@ejemplo.com" required style="width:100%;border:1.5px solid rgba(15,34,64,0.12);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:0.9rem;color:#0f2240;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;color:#0f2240;opacity:0.5;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Número de contacto</label>
+        <input id="g-telefono" type="tel" placeholder="600 000 000" required style="width:100%;border:1.5px solid rgba(15,34,64,0.12);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:0.9rem;color:#0f2240;" />
+      </div>
+
+      <!-- Detalles reserva -->
+      <div style="border-top:1px solid rgba(15,34,64,0.07);padding-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="display:block;font-size:0.72rem;font-weight:700;color:#0f2240;opacity:0.5;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Fecha</label>
+          <input id="g-fecha" type="date" required style="width:100%;border:1.5px solid rgba(15,34,64,0.12);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:0.9rem;color:#0f2240;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;font-weight:700;color:#0f2240;opacity:0.5;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Hora</label>
+          <input id="g-hora" type="time" required style="width:100%;border:1.5px solid rgba(15,34,64,0.12);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:0.9rem;color:#0f2240;" />
+        </div>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;color:#0f2240;opacity:0.5;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Mesa disponible</label>
+        <select id="g-mesa" required style="width:100%;border:1.5px solid rgba(15,34,64,0.12);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:0.9rem;color:#0f2240;background:white;">
+          <option value="">Primero selecciona fecha y hora</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:700;color:#0f2240;opacity:0.5;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Anotaciones <span style="opacity:0.6;font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+        <textarea id="g-notas" placeholder="Peticiones especiales, alergias, celebración..." rows="2" style="width:100%;border:1.5px solid rgba(15,34,64,0.12);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:0.9rem;color:#0f2240;resize:none;"></textarea>
+      </div>
+
+      <button type="submit" style="width:100%;background:linear-gradient(135deg,#0f2240,#1a3a6b);color:white;border:none;border-radius:12px;padding:14px;font-family:'Inter',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;margin-top:4px;letter-spacing:0.02em;">
+        Confirmar reserva
+      </button>
+    </form>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  let _barId = null;
+  let _mesasCache = [];
+  let _fetchTimer = null;
+
+  window.abrirReservaGuest = function(barId, barNombre) {
+    _barId = barId;
+    _mesasCache = [];
+    document.getElementById('g-bar-id').value  = barId;
+    document.getElementById('modal-bar-nombre').textContent = barNombre;
+    document.getElementById('g-nombre').value   = '';
+    document.getElementById('g-email').value    = '';
+    document.getElementById('g-telefono').value = '';
+    document.getElementById('g-fecha').value    = '';
+    document.getElementById('g-hora').value     = '';
+    document.getElementById('g-notas').value    = '';
+    document.getElementById('g-mesa').innerHTML = '<option value="">Primero selecciona fecha y hora</option>';
+    document.getElementById('g-fecha').min = new Date().toISOString().split('T')[0];
+    document.getElementById('modal-guest').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.cerrarReservaGuest = function() {
+    document.getElementById('modal-guest').style.display = 'none';
+    document.body.style.overflow = '';
+  };
+
+  // Cerrar al click fuera
+  document.getElementById('modal-guest').addEventListener('click', function(e) {
+    if (e.target === this) cerrarReservaGuest();
+  });
+
+  // Cargar mesas cuando cambian fecha u hora
+  function scheduleLoadMesas() {
+    clearTimeout(_fetchTimer);
+    _fetchTimer = setTimeout(loadMesas, 500);
+  }
+  document.getElementById('g-fecha').addEventListener('change', scheduleLoadMesas);
+  document.getElementById('g-hora').addEventListener('change', scheduleLoadMesas);
+
+  async function loadMesas() {
+    const fecha = document.getElementById('g-fecha').value;
+    const hora  = document.getElementById('g-hora').value;
+    const sel   = document.getElementById('g-mesa');
+    if (!fecha || !hora || !_barId) return;
+
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    try {
+      const res  = await fetch(`/api/bares/${_barId}/mesas?fecha=${fecha}&hora=${hora}`);
+      const data = await res.json();
+      _mesasCache = data;
+      const disponibles = data.filter(m => m.disponible !== false);
+      if (disponibles.length === 0) {
+        sel.innerHTML = '<option value="">Sin mesas disponibles</option>';
+      } else {
+        sel.innerHTML = disponibles.map(m =>
+          `<option value="${m.id}">Mesa ${m.numero} · ${m.capacidad} personas</option>`
+        ).join('');
+      }
+    } catch {
+      sel.innerHTML = '<option value="">Error al cargar mesas</option>';
+    }
+  }
+
+  // Submit
+  document.getElementById('form-guest').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('button[type=submit]');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    const mesaId = document.getElementById('g-mesa').value;
+    const mesaSeleccionada = _mesasCache.find(m => String(m.id) === String(mesaId));
+    const body = {
+      bar_id:            _barId,
+      mesa_id:           mesaId,
+      fecha:             document.getElementById('g-fecha').value,
+      hora:              document.getElementById('g-hora').value,
+      num_personas:      mesaSeleccionada?.capacidad ?? 1,
+      nombre_invitado:   document.getElementById('g-nombre').value,
+      email_invitado:    document.getElementById('g-email').value,
+      telefono_invitado: document.getElementById('g-telefono').value,
+      notas:             document.getElementById('g-notas').value || null,
+    };
+
+    try {
+      const res = await fetch('/api/reservas/guest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'Error');
+
+      cerrarReservaGuest();
+      // Mostrar confirmación
+      const ok = document.createElement('div');
+      ok.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(10,20,40,0.7);display:flex;align-items:center;justify-content:center;padding:24px;';
+      ok.innerHTML = `
+        <div style="background:white;border-radius:24px;padding:40px;max-width:400px;text-align:center;box-shadow:0 24px 80px rgba(15,34,64,0.25);">
+          <div style="width:56px;height:56px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:800;color:#0f2240;margin-bottom:10px;">¡Reserva enviada!</h3>
+          <p style="font-size:0.9rem;color:rgba(15,34,64,0.55);line-height:1.6;">Te confirmaremos por correo a <strong>${body.email_invitado}</strong>. El bar revisará tu solicitud pronto.</p>
+          <button onclick="this.closest('[style*=fixed]').remove();document.body.style.overflow='';" style="margin-top:24px;background:linear-gradient(135deg,#0f2240,#1a3a6b);color:white;border:none;border-radius:12px;padding:13px 32px;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;">Cerrar</button>
+        </div>`;
+      document.body.appendChild(ok);
+      document.body.style.overflow = 'hidden';
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Confirmar reserva';
+    }
+  });
+})();
+</script>
+</body>
+</html>

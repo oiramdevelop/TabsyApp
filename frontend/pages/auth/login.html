@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tabsy — Acceder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --navy:#0f2240; --blue:#1a3a6b; --steel:#4a6fa5; --sand:#c9a96e; --cream:#f5f0e8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--cream); min-height: 100vh; display: flex; }
+    h1,h2,.display { font-family: 'Playfair Display', serif; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes float { 0%,100% { transform:translateY(0) rotate(-3deg); } 50% { transform:translateY(-10px) rotate(3deg); } }
+    .fade-up { animation: fadeUp 0.6s ease both; }
+    .float-anim { animation: float 4s ease-in-out infinite; }
+
+    .left-panel {
+      background: linear-gradient(160deg, var(--navy) 0%, #1e3d6e 60%, #0d1f3c 100%);
+      background-image:
+        linear-gradient(160deg, var(--navy) 0%, #1e3d6e 60%, #0d1f3c 100%),
+        repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(201,169,110,0.03) 20px, rgba(201,169,110,0.03) 40px);
+      position: relative; overflow: hidden;
+    }
+    .left-panel::before {
+      content:'';
+      position:absolute; width:500px; height:500px;
+      border-radius:50%;
+      background: radial-gradient(circle, rgba(201,169,110,0.12) 0%, transparent 70%);
+      top:-100px; left:-100px;
+    }
+    .left-panel::after {
+      content:'';
+      position:absolute; width:300px; height:300px;
+      border-radius:50%;
+      background: radial-gradient(circle, rgba(74,111,165,0.2) 0%, transparent 70%);
+      bottom:-50px; right:-50px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: white;
+      border: 1.5px solid rgba(15,34,64,0.12);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      color: var(--navy);
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--steel);
+      box-shadow: 0 0 0 3px rgba(74,111,165,0.1);
+    }
+    .form-input::placeholder { color: rgba(15,34,64,0.3); }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(15,34,64,0.3); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .tab-btn {
+      flex: 1; padding: 10px; border-radius: 10px;
+      font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; border: none; background: transparent;
+      color: rgba(15,34,64,0.4);
+    }
+    .tab-btn.active { background: white; color: var(--navy); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--navy); opacity: 0.6; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+
+<!-- Left panel decorativo -->
+<div class="left-panel hidden lg:flex flex-col justify-between w-1/2 p-16 text-white relative z-10">
+  <a href="/" class="flex items-center">
+    <img src="/assets/images/logo2-2.png" alt="Tabsy" style="height:90px;width:auto;" />
+  </a>
+
+  <div>
+    <h1 class="text-5xl font-black leading-tight mb-6" style="letter-spacing:-0.03em;">
+      Tu mesa favorita<br/>te está<br/>
+      <span style="color:var(--sand);">esperando.</span>
+    </h1>
+    <p class="text-white/50 text-lg leading-relaxed max-w-sm">
+      Reserva en los mejores bares sin complicaciones.
+    </p>
+
+    <div class="mt-12 flex items-center gap-4">
+      <div class="flex -space-x-2">
+        <div class="w-9 h-9 rounded-full bg-amber-400 border-2 border-navy flex items-center justify-center text-xs font-bold text-white">A</div>
+        <div class="w-9 h-9 rounded-full bg-blue-400 border-2 border-navy flex items-center justify-center text-xs font-bold text-white">B</div>
+        <div class="w-9 h-9 rounded-full bg-green-400 border-2 border-navy flex items-center justify-center text-xs font-bold text-white">C</div>
+      </div>
+      <p class="text-sm text-white/50">+500 usuarios ya reservan con Tabsy</p>
+    </div>
+  </div>
+
+  <p class="text-white/20 text-xs">&copy; 2026 Elevio Studio</p>
+</div>
+
+<!-- Right panel formulario -->
+<div class="flex-1 flex items-center justify-center p-6 lg:p-16">
+  <div class="w-full max-w-md fade-up">
+
+    <!-- Logo mobile -->
+    <div class="lg:hidden flex items-center mb-8 justify-center">
+      <img src="/assets/images/logo2-2.png" alt="Tabsy" style="height:72px;width:auto;" />
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 p-1 rounded-xl mb-8" style="background:rgba(15,34,64,0.06);">
+      <button class="tab-btn active" id="tab-login" onclick="showTab('login')">Iniciar sesión</button>
+      <button class="tab-btn" id="tab-register" onclick="showTab('register')">Crear cuenta</button>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div id="section-login">
+      <h2 class="text-2xl font-bold mb-1" style="color:var(--navy);">Bienvenido de nuevo</h2>
+      <p class="text-sm mb-8" style="color:rgba(15,34,64,0.45);">Introduce tus datos para acceder</p>
+
+      <form id="form-login" class="flex flex-col gap-5">
+        <div>
+          <label for="login-email">Correo electrónico</label>
+          <input id="login-email" type="email" class="form-input" placeholder="tucorreo@ejemplo.com" required />
+        </div>
+        <div>
+          <label for="login-password">Contraseña</label>
+          <div style="position:relative;">
+            <input id="login-password" type="password" class="form-input" placeholder="••••••••" required style="padding-right:46px;" />
+            <button type="button" tabindex="-1" onclick="togglePass('login-password',this)"
+              style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(15,34,64,0.3);font-size:1rem;line-height:1;padding:4px;transition:color 0.15s;"
+              title="Mostrar / ocultar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary mt-2">Entrar</button>
+      </form>
+
+      <p class="text-center text-sm mt-6" style="color:rgba(15,34,64,0.45);">
+        ¿No tienes cuenta?
+        <button onclick="showTab('register')" class="font-semibold underline" style="color:var(--steel);">Regístrate</button>
+      </p>
+    </div>
+
+    <!-- ── REGISTRO ── -->
+    <div id="section-register" class="hidden">
+      <h2 class="text-2xl font-bold mb-1" style="color:var(--navy);">Crear cuenta</h2>
+      <p class="text-sm mb-8" style="color:rgba(15,34,64,0.45);">Es gratis y solo tarda un momento</p>
+
+      <form id="form-register" class="flex flex-col gap-5">
+        <div>
+          <label for="reg-name">Nombre completo</label>
+          <input id="reg-name" type="text" class="form-input" placeholder="Tu nombre" required />
+        </div>
+        <div>
+          <label for="reg-email">Correo electrónico</label>
+          <input id="reg-email" type="email" class="form-input" placeholder="tucorreo@ejemplo.com" required />
+        </div>
+        <div>
+          <label for="reg-password">Contraseña</label>
+          <div style="position:relative;">
+            <input id="reg-password" type="password" class="form-input" placeholder="Mínimo 8 caracteres" required style="padding-right:46px;" />
+            <button type="button" tabindex="-1" onclick="togglePass('reg-password',this)"
+              style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(15,34,64,0.3);font-size:1rem;line-height:1;padding:4px;transition:color 0.15s;"
+              title="Mostrar / ocultar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div>
+          <label for="reg-confirm">Confirmar contraseña</label>
+          <div style="position:relative;">
+            <input id="reg-confirm" type="password" class="form-input" placeholder="Repite la contraseña" required style="padding-right:46px;" />
+            <button type="button" tabindex="-1" onclick="togglePass('reg-confirm',this)"
+              style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(15,34,64,0.3);font-size:1rem;line-height:1;padding:4px;transition:color 0.15s;"
+              title="Mostrar / ocultar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary mt-2">Crear mi cuenta</button>
+      </form>
+
+      <p class="text-center text-sm mt-6" style="color:rgba(15,34,64,0.45);">
+        ¿Ya tienes cuenta?
+        <button onclick="showTab('login')" class="font-semibold underline" style="color:var(--steel);">Inicia sesión</button>
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<div id="tabsy-loader"></div>
+
+<script>
+  function togglePass(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const show  = input.type === 'password';
+    input.type  = show ? 'text' : 'password';
+    btn.innerHTML = show
+      ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+      : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    btn.style.color = show ? 'rgba(15,34,64,0.55)' : 'rgba(15,34,64,0.3)';
+  }
+
+  function showTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('section-login').classList.toggle('hidden', !isLogin);
+    document.getElementById('section-register').classList.toggle('hidden', isLogin);
+    document.getElementById('tab-login').classList.toggle('active', isLogin);
+    document.getElementById('tab-register').classList.toggle('active', !isLogin);
+  }
+</script>
+<script type="module" src="/assets/js/pages/login.js"></script>
+</body>
+</html>

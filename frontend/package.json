@@ -1,0 +1,13 @@
+{
+  "name": "tabsy-frontend",
+  "version": "1.0.0",
+  "description": "Frontend de Tabsy — reservas de bar",
+  "scripts": {
+    "dev":   "tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css --watch",
+    "build": "tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}

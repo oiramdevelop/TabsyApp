@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/api/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"password\":\"test1234\"}')",
+      "Bash(docker exec *)",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\" http://localhost/api/register -X POST -H \"Content-Type: application/json\" -H \"Accept: application/json\" -d '{\"name\":\"Test\",\"email\":\"test@test.com\",\"password\":\"password123\",\"password_confirmation\":\"password123\"}')",
+      "Bash(curl -s -w \"\\\\nHTTP:%{http_code}\" http://localhost/api/register -X POST -H \"Content-Type: application/json\" -H \"Accept: application/json\" -d '{\"name\":\"Test2\",\"email\":\"test2@test.com\",\"password\":\"password123\",\"password_confirmation\":\"password123\"}')",
+      "Bash(xargs cat *)",
+      "Bash(docker restart *)",
+      "Bash(docker stop *)",
+      "Bash(docker rm *)",
+      "Bash(kill %1)"
+    ]
+  }
+}

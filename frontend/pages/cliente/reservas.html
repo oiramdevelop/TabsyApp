@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tabsy — Mi perfil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --navy:#0f2240; --blue:#1a3a6b; --steel:#4a6fa5; --sand:#c9a96e; --cream:#f5f0e8; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',sans-serif; background:#f4f5f8; color:var(--navy); min-height:100vh; }
+    h1,h2,h3 { font-family:'Playfair Display',serif; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(18px);} to{opacity:1;transform:translateY(0);} }
+    .fade-up { animation:fadeUp 0.45s ease both; }
+
+    /* ── HERO HEADER ── */
+    .page-header {
+      background:linear-gradient(135deg,var(--navy) 0%,#1a3a6b 100%);
+      background-image:linear-gradient(135deg,var(--navy) 0%,#1a3a6b 100%),
+        repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(201,169,110,0.03) 20px,rgba(201,169,110,0.03) 40px);
+      color:white;padding:40px 0 0;
+    }
+    .header-inner { max-width:1100px;margin:0 auto;padding:0 2rem; }
+
+    /* ── STAT PILLS ── */
+    .stat-pill {
+      background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+      border-radius:16px;padding:16px 22px;text-align:center;
+      transition:background 0.2s;flex:1;min-width:120px;
+    }
+    .stat-pill:hover { background:rgba(255,255,255,0.12); }
+    .stat-pill-n { font-family:'Inter',sans-serif;font-size:1.8rem;font-weight:900;color:white;line-height:1; }
+    .stat-pill-l { font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-top:4px; }
+
+    /* ── TABS ── */
+    .tab-row { display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.1);margin-top:32px; }
+    .tab-btn {
+      padding:14px 24px;font-size:0.875rem;font-weight:600;color:rgba(255,255,255,0.45);
+      border:none;background:transparent;cursor:pointer;transition:all 0.15s;
+      border-bottom:3px solid transparent;margin-bottom:-1px;
+    }
+    .tab-btn:hover { color:rgba(255,255,255,0.8); }
+    .tab-btn.active { color:white;border-bottom-color:var(--sand); }
+
+    /* ── FORM ── */
+    .form-input {
+      width:100%;background:white;border:1.5px solid rgba(15,34,64,0.1);
+      border-radius:12px;padding:12px 14px;font-family:'Inter',sans-serif;
+      font-size:0.9rem;color:var(--navy);transition:all 0.2s;
+    }
+    .form-input:focus { outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(74,111,165,0.1); }
+    .form-input::placeholder { color:rgba(15,34,64,0.3); }
+    select.form-input { cursor:pointer; }
+    .field-label { display:block;font-size:0.75rem;font-weight:700;color:rgba(15,34,64,0.45);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px; }
+
+    .btn-primary {
+      background:linear-gradient(135deg,var(--navy),var(--blue));color:white;border:none;
+      border-radius:12px;padding:13px 24px;font-family:'Inter',sans-serif;
+      font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.2s;width:100%;
+    }
+    .btn-primary:hover { transform:translateY(-1px);box-shadow:0 8px 25px rgba(15,34,64,0.25); }
+
+    /* ── RESERVA CARD ── */
+    .reserva-card {
+      background:white;border-radius:18px;border:1px solid rgba(15,34,64,0.07);
+      padding:20px 24px;transition:box-shadow 0.2s;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+    }
+    .reserva-card:hover { box-shadow:0 4px 20px rgba(15,34,64,0.09); }
+    .estado-badge { font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:999px; }
+    .estado-pendiente  { background:#fef3c7;color:#92400e; }
+    .estado-confirmada { background:#d1fae5;color:#065f46; }
+    .estado-cancelada  { background:#f3f4f6;color:#6b7280; }
+    .estado-rechazada  { background:#fee2e2;color:#991b1b; }
+
+    /* ── RESEÑA CARD ── */
+    .resena-card {
+      background:white;border-radius:20px;border:1px solid rgba(15,34,64,0.07);
+      overflow:hidden;display:flex;flex-direction:column;
+      transition:transform 0.22s,box-shadow 0.22s;
+    }
+    .resena-card:hover { transform:translateY(-4px);box-shadow:0 14px 36px rgba(15,34,64,0.1); }
+    .resena-thumb {
+      height:140px;background:linear-gradient(135deg,var(--navy),#2d5a8e);
+      display:flex;align-items:center;justify-content:center;font-size:2.8rem;
+      overflow:hidden;flex-shrink:0;
+    }
+    .resena-thumb img { width:100%;height:100%;object-fit:cover; }
+    .star-row { display:flex;gap:4px;margin:8px 0; }
+    .star {
+      font-size:1.4rem;cursor:pointer;color:#d1d5db;
+      transition:color 0.15s,transform 0.15s;line-height:1;
+    }
+    .star:hover,.star.lit { color:#f59e0b; }
+    .star:hover { transform:scale(1.2); }
+    .btn-google {
+      display:inline-flex;align-items:center;gap:6px;
+      font-size:0.8rem;font-weight:600;color:var(--steel);text-decoration:none;
+      padding:8px 14px;border-radius:8px;border:1.5px solid rgba(74,111,165,0.2);
+      transition:all 0.15s;
+    }
+    .btn-google:hover { background:rgba(74,111,165,0.08);border-color:var(--steel); }
+
+    .content-wrap { max-width:1100px;margin:0 auto;padding:36px 2rem; }
+
+    @media(min-width:1024px) { .form-sticky { position:sticky;top:24px; } }
+  </style>
+</head>
+<body>
+
+<div id="navbar"></div>
+
+<!-- ══ HEADER ══ -->
+<div class="page-header" style="padding-top:80px;">
+  <div class="header-inner">
+
+    <!-- User info -->
+    <div class="flex items-center gap-4 mb-6 fade-up">
+      <div id="user-avatar" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#c9a96e,#b8924a);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;color:white;flex-shrink:0;"></div>
+      <div>
+        <p id="user-nombre" style="font-size:1.25rem;font-weight:700;color:white;letter-spacing:-0.01em;"></p>
+        <p style="font-size:0.8rem;color:rgba(255,255,255,0.42);">Cliente · Tabsy</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="flex gap-3 flex-wrap mb-0 fade-up" style="animation-delay:0.1s;">
+      <div class="stat-pill">
+        <div class="stat-pill-n" id="sp-total">—</div>
+        <div class="stat-pill-l">Reservas totales</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-n" id="sp-conf" style="color:#6ee7b7;">—</div>
+        <div class="stat-pill-l">Confirmadas</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-n" id="sp-pend" style="color:#fcd34d;">—</div>
+        <div class="stat-pill-l">Pendientes</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-n" id="sp-prox" style="font-size:1rem;padding-top:4px;">—</div>
+        <div class="stat-pill-l">Próxima reserva</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-nueva"   onclick="showSection('nueva')">Nueva reserva</button>
+      <button class="tab-btn"        id="tab-mis"     onclick="showSection('mis')">Mis reservas</button>
+      <button class="tab-btn"        id="tab-resenas" onclick="showSection('resenas')">Mis reseñas</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONTENT ══ -->
+<div class="content-wrap">
+
+  <!-- ── NUEVA RESERVA ── -->
+  <div id="section-nueva" class="fade-up">
+    <div class="lg:grid lg:grid-cols-5 lg:gap-10">
+
+      <div class="lg:col-span-3">
+        <h2 class="text-2xl font-bold mb-6">Hacer una reserva</h2>
+        <form id="form-reserva" class="flex flex-col gap-5 bg-white rounded-2xl p-8 shadow-sm border border-black/5">
+
+          <div>
+            <label class="field-label" for="reserva-bar">Bar</label>
+            <select id="reserva-bar" class="form-input" required>
+              <option value="">Cargando bares...</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="field-label" for="reserva-fecha">Fecha</label>
+              <input id="reserva-fecha" type="date" class="form-input" required />
+            </div>
+            <div>
+              <label class="field-label" for="reserva-hora">Hora</label>
+              <select id="reserva-hora" class="form-input" required>
+                <option value="">Seleccionar...</option>
+                <option>13:00</option><option>13:30</option><option>14:00</option>
+                <option>14:30</option><option>15:00</option><option>20:00</option>
+                <option>20:30</option><option>21:00</option><option>21:30</option>
+                <option>22:00</option><option>22:30</option><option>23:00</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="field-label" for="reserva-personas">Número de personas</label>
+            <input id="reserva-personas" type="number" min="1" max="20" class="form-input" placeholder="Ej: 2" required />
+          </div>
+
+          <div>
+            <label class="field-label" for="reserva-mesa">Mesa disponible</label>
+            <select id="reserva-mesa" class="form-input" required>
+              <option value="">Elige bar, fecha y hora primero</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label" for="reserva-notas">Notas (opcional)</label>
+            <textarea id="reserva-notas" class="form-input" rows="3"
+              placeholder="¿Alguna petición especial? Cumpleaños, alergias..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary mt-2">Confirmar reserva</button>
+        </form>
+      </div>
+
+      <div class="lg:col-span-2 mt-8 lg:mt-0 form-sticky">
+        <div class="bg-white rounded-2xl p-6 border border-black/5 shadow-sm">
+          <h3 class="font-bold text-lg mb-4">¿Cómo funciona?</h3>
+          <div class="flex flex-col gap-4">
+            <div class="flex gap-3 items-start">
+              <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:var(--navy);">1</span>
+              <p class="text-sm text-gray-500 leading-relaxed">Elige el bar, la fecha y la hora que mejor te venga.</p>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:var(--navy);">2</span>
+              <p class="text-sm text-gray-500 leading-relaxed">Selecciona una mesa disponible según tus personas.</p>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:var(--navy);">3</span>
+              <p class="text-sm text-gray-500 leading-relaxed">El bar confirma tu reserva. ¡Ya está!</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 p-4 rounded-xl text-sm text-amber-800" style="background:#fef3c7;">
+          Las mesas aparecen solo si están disponibles en esa fecha y hora.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MIS RESERVAS ── -->
+  <div id="section-mis" class="hidden fade-up">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold">Mis reservas</h2>
+    </div>
+    <div id="mis-reservas" class="flex flex-col gap-4">
+      <div class="text-center py-12 text-gray-400">Cargando reservas...</div>
+    </div>
+  </div>
+
+  <!-- ── MIS RESEÑAS ── -->
+  <div id="section-resenas" class="hidden fade-up">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold">Mis reseñas</h2>
+      <p class="text-sm" style="color:rgba(15,34,64,0.4);">Bares que has visitado con Tabsy</p>
+    </div>
+    <div id="resenas-empty" class="hidden text-center py-20" style="color:rgba(15,34,64,0.4);">
+      <div style="font-size:2rem;font-weight:700;color:rgba(15,34,64,0.15);margin-bottom:16px;">★</div>
+      <p class="font-bold text-lg mb-2">Aún no has visitado ningún bar</p>
+      <p class="text-sm">Cuando tengas reservas confirmadas, aparecerán aquí para que puedas valorarlas.</p>
+    </div>
+    <div id="grid-resenas" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+  </div>
+
+</div>
+
+<div id="tabsy-loader"></div>
+
+<script>
+  const TABS = ['nueva', 'mis', 'resenas'];
+
+  function showSection(sec) {
+    TABS.forEach(s => {
+      document.getElementById('section-' + s).classList.toggle('hidden', s !== sec);
+      document.getElementById('tab-' + s).classList.toggle('active', s === sec);
+    });
+    if (sec === 'mis')     window.__cargarMisReservas?.();
+    if (sec === 'resenas') window.__cargarResenas?.();
+  }
+
+  document.getElementById('reserva-fecha').min = new Date().toISOString().split('T')[0];
+</script>
+
+<script type="module">
+  import { renderNavbar } from '/assets/js/components/navbar.js';
+  import { auth }         from '/assets/js/core/auth.js';
+  import { api }          from '/assets/js/core/api.js';
+
+  renderNavbar('navbar');
+
+  const user = auth.getUser();
+  if (user) {
+    document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+    document.getElementById('user-nombre').textContent = user.name;
+  }
+
+  async function cargarStats() {
+    try {
+      const reservas = await api.reservas.misReservas();
+      const conf  = reservas.filter(r => r.estado === 'confirmada');
+      const pend  = reservas.filter(r => r.estado === 'pendiente');
+      const hoy   = new Date().toISOString().split('T')[0];
+      const prox  = reservas
+        .filter(r => r.estado === 'confirmada' && r.fecha >= hoy)
+        .sort((a, b) => a.fecha.localeCompare(b.fecha))[0];
+
+      document.getElementById('sp-total').textContent = reservas.length;
+      document.getElementById('sp-conf').textContent  = conf.length;
+      document.getElementById('sp-pend').textContent  = pend.length;
+      document.getElementById('sp-prox').textContent  = prox
+        ? prox.fecha.split('-').reverse().slice(0,2).join('/') + ' ' + prox.hora.slice(0,5)
+        : '—';
+
+      window.__reservasCache = reservas;
+    } catch (_) {}
+  }
+
+  window.__cargarResenas = async function() {
+    const container = document.getElementById('grid-resenas');
+    const empty     = document.getElementById('resenas-empty');
+    container.innerHTML = '<div class="text-center py-8 col-span-3 text-gray-400">Cargando...</div>';
+
+    try {
+      const reservas = window.__reservasCache ?? await api.reservas.misReservas();
+      const baresMap = new Map();
+      reservas
+        .filter(r => r.estado === 'confirmada' && r.bar)
+        .forEach(r => {
+          if (!baresMap.has(r.bar.id)) baresMap.set(r.bar.id, { bar: r.bar, fecha: r.fecha });
+        });
+
+      const bares = [...baresMap.values()];
+
+      if (!bares.length) {
+        container.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      container.innerHTML = bares.map(({ bar, fecha }) => {
+        const saved = parseInt(localStorage.getItem(`tabsy_rating_${bar.id}`) || '0');
+        const stars = [1,2,3,4,5].map(n =>
+          `<span class="star ${n <= saved ? 'lit' : ''}" data-bar="${bar.id}" data-val="${n}" onclick="setRating(${bar.id},${n})">★</span>`
+        ).join('');
+        const gmapsLink = bar.google_place_id
+          ? `<a href="https://www.google.com/maps/place/?q=place_id:${bar.google_place_id}" target="_blank" rel="noopener" class="btn-google">Ver reseñas en Google →</a>`
+          : '';
+        return `
+          <div class="resena-card fade-up">
+            <div class="resena-thumb">
+              ${bar.imagen ? `<img src="${bar.imagen}" alt="${bar.nombre}" />` : `<span style="font-size:1.4rem;font-weight:700;color:rgba(255,255,255,0.3);">${bar.nombre.charAt(0)}</span>`}
+            </div>
+            <div class="p-5 flex flex-col gap-2 flex-1">
+              <div>
+                <h3 class="font-bold text-base mb-1">${bar.nombre}</h3>
+                <p class="text-xs" style="color:rgba(15,34,64,0.5);">${bar.ciudad || ''}${bar.direccion ? ' · ' + bar.direccion : ''}</p>
+              </div>
+              <p class="text-xs" style="color:rgba(15,34,64,0.35);">Última visita: ${fecha}</p>
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:rgba(15,34,64,0.4);">Tu valoración</p>
+                <div class="star-row" id="stars-${bar.id}">${stars}</div>
+              </div>
+              <div class="mt-auto pt-2">${gmapsLink}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (_) {
+      container.innerHTML = '<p class="text-red-400 text-sm col-span-3">Error al cargar tus reseñas.</p>';
+    }
+  };
+
+  window.setRating = function(barId, val) {
+    const prev = parseInt(localStorage.getItem(`tabsy_rating_${barId}`) || '0');
+    const newVal = prev === val ? 0 : val;
+    localStorage.setItem(`tabsy_rating_${barId}`, newVal);
+    document.querySelectorAll(`[data-bar="${barId}"]`).forEach(s => {
+      s.classList.toggle('lit', parseInt(s.dataset.val) <= newVal);
+    });
+  };
+
+  cargarStats();
+</script>
+
+<script type="module" src="/assets/js/pages/cliente.js"></script>
+</body>
+</html>

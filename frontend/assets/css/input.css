@@ -1,0 +1,230 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   TABSY — Global CSS
+   Fuente: assets/css/input.css
+   Compilado a: assets/css/output.css
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts ──────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── Base ──────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply font-body bg-cream text-navy-900;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  /* Scrollbar personalizada */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(15,34,64,0.2);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(15,34,64,0.4);
+  }
+
+  /* Selección de texto */
+  ::selection {
+    background: rgba(201,169,110,0.3);
+    color: #0f2240;
+  }
+
+  /* Focus visible accesible */
+  :focus-visible {
+    outline: 2px solid #4a6fa5;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* ── Componentes globales ───────────────────────────────────── */
+@layer components {
+
+  /* Noise texture (aplicar a secciones oscuras) */
+  .noise-overlay {
+    position: relative;
+  }
+  .noise-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+
+  /* Patrón azulejo gaditano */
+  .pattern-azulejo {
+    background-color: #0f2240;
+    background-image:
+      repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(255,255,255,0.018) 12px, rgba(255,255,255,0.018) 24px),
+      repeating-linear-gradient(-45deg, transparent, transparent 12px, rgba(201,169,110,0.045) 12px, rgba(201,169,110,0.045) 24px);
+  }
+
+  /* Navbar fija con blur */
+  .navbar-blur {
+    @apply fixed top-0 left-0 right-0 z-50;
+    backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(15,34,64,0.88);
+    border-bottom: 1px solid rgba(201,169,110,0.18);
+  }
+
+  /* Hero degradado */
+  .hero-gradient {
+    background: linear-gradient(150deg,
+      #0f2240 0%,
+      #1a3a6b 45%,
+      #0d1f3c 100%
+    );
+  }
+
+  /* Sidebar admin */
+  .sidebar-admin {
+    background: linear-gradient(180deg, #0f2240 0%, #0a1a35 100%);
+    border-right: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* Línea decorativa con shimmer */
+  .line-sand {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #c9a96e, transparent);
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    background: linear-gradient(90deg, #e8e3db 25%, #f0ebe3 50%, #e8e3db 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer rounded-2xl;
+  }
+
+  /* Divider con icono central */
+  .divider-icon {
+    @apply flex items-center gap-4 my-8;
+    &::before, &::after {
+      content: '';
+      @apply flex-1 h-px bg-navy-100;
+    }
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply relative;
+    &:hover .tooltip-text {
+      @apply opacity-100 translate-y-0 pointer-events-auto;
+    }
+  }
+  .tooltip-text {
+    @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+           bg-navy-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg
+           whitespace-nowrap opacity-0 translate-y-1 pointer-events-none
+           transition-all duration-200;
+  }
+
+  /* Pulse indicator (punto verde animado) */
+  .status-dot {
+    @apply relative inline-flex;
+    &::before {
+      content: '';
+      @apply absolute inset-0 rounded-full bg-current animate-pulse-ring opacity-75;
+    }
+  }
+
+  /* Table estilizada */
+  .tabsy-table {
+    @apply w-full border-collapse;
+    thead th {
+      @apply text-left px-4 py-3 text-xs font-bold tracking-widest uppercase;
+      color: rgba(15,34,64,0.4);
+      border-bottom: 1px solid rgba(15,34,64,0.08);
+    }
+    tbody tr {
+      @apply border-b border-navy-50 transition-colors duration-150;
+      &:hover { background: rgba(15,34,64,0.025); }
+    }
+    tbody td {
+      @apply px-4 py-3.5 text-sm align-middle;
+    }
+  }
+
+  /* Form label */
+  .form-label {
+    @apply block text-xs font-semibold tracking-wider uppercase mb-1.5;
+    color: rgba(15,34,64,0.5);
+  }
+
+  /* Sidebar link */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl mx-2 my-0.5
+           text-sm font-medium transition-all duration-200 cursor-pointer border-none bg-transparent;
+    color: rgba(255,255,255,0.5);
+    &:hover { background: rgba(255,255,255,0.07); color: white; }
+    &.active { background: rgba(201,169,110,0.18); color: #c9a96e; }
+  }
+
+  /* Stat card del dashboard */
+  .stat-card {
+    @apply card p-6;
+    .stat-value { @apply text-3xl font-black font-display; }
+    .stat-label { @apply text-sm text-gray-400 mt-1; }
+  }
+
+  /* Tag de ubicación de mesa */
+  .mesa-tag-interior { @apply bg-blue-50 text-blue-700; }
+  .mesa-tag-terraza  { @apply bg-green-50 text-green-700; }
+  .mesa-tag-barra    { @apply bg-amber-50 text-amber-700; }
+}
+
+/* ── Utilidades extra ───────────────────────────────────────── */
+@layer utilities {
+  /* Stagger delays para animaciones en lista */
+  .delay-75  { animation-delay: 75ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-225 { animation-delay: 225ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-450 { animation-delay: 450ms; }
+  .delay-600 { animation-delay: 600ms; }
+
+  /* Truncar texto */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Blur suave de entrada */
+  .animate-blur-in {
+    animation: fade-in 0.4s ease both;
+    backdrop-filter: blur(0px);
+  }
+
+  /* Gradiente de texto personalizado */
+  .text-gradient {
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
