@@ -64,7 +64,7 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    command: sh -c "composer install --no-interaction --no-dev --optimize-autoloader && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+    command: sh -c "composer install --no-interaction --no-dev --optimize-autoloader && php artisan migrate --force && php artisan storage:link --force && php artisan serve --host=0.0.0.0 --port=8000"
 
   # ── Base de datos MySQL ──────────────────────────────────────
   mysql:

@@ -38,12 +38,26 @@ export function renderNavbar(containerId = 'navbar') {
 
                     ${user ? `
                         <div style="display:flex;align-items:center;gap:10px;padding-left:20px;border-left:1px solid rgba(255,255,255,0.1);">
-                            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#c9a96e,#b8924a);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:white;flex-shrink:0;">
-                                ${initial}
-                            </div>
-                            <span style="font-size:0.82rem;color:rgba(255,255,255,0.5);">
-                                Hola, <strong style="color:white;font-weight:600;">${user.name.split(' ')[0]}</strong>
-                            </span>
+                            <a href="/pages/perfil.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;"
+                               onmouseover="this.querySelector('.nav-avatar').style.boxShadow='0 0 0 2px #c9a96e'"
+                               onmouseout="this.querySelector('.nav-avatar').style.boxShadow='none'">
+                                ${user.avatar_url
+                                    ? `<img class="nav-avatar" src="${user.avatar_url}" alt="${initial}"
+                                           style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;transition:box-shadow 0.15s;" />`
+                                    : `<div class="nav-avatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#c9a96e,#b8924a);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:white;flex-shrink:0;transition:box-shadow 0.15s;">
+                                           ${initial}
+                                       </div>`
+                                }
+                                <span style="font-size:0.82rem;color:rgba(255,255,255,0.5);">
+                                    Hola, <strong style="color:white;font-weight:600;">${user.name.split(' ')[0]}</strong>
+                                </span>
+                            </a>
+                            <a href="/pages/perfil.html"
+                                style="font-size:0.78rem;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.12);padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:500;transition:all 0.15s;text-decoration:none;"
+                                onmouseover="this.style.background='rgba(255,255,255,0.12)';this.style.color='rgba(255,255,255,0.7)'"
+                                onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.45)'">
+                                Perfil
+                            </a>
                             <button id="btn-logout"
                                 style="font-size:0.78rem;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.12);padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:500;transition:all 0.15s;"
                                 onmouseover="this.style.background='rgba(255,255,255,0.12)';this.style.color='rgba(255,255,255,0.7)'"
@@ -52,7 +66,7 @@ export function renderNavbar(containerId = 'navbar') {
                             </button>
                         </div>
                     ` : `
-                        <a href="/pages/auth/login.html"
+                        <a href="/pages/auth/auth.html"
                             style="font-size:0.875rem;background:linear-gradient(135deg,#c9a96e,#b8924a);color:white;padding:10px 22px;border-radius:10px;font-weight:600;text-decoration:none;box-shadow:0 3px 14px rgba(201,169,110,0.28);letter-spacing:0.01em;"
                             onmouseover="this.style.boxShadow='0 6px 22px rgba(201,169,110,0.45)';this.style.transform='translateY(-1px)'"
                             onmouseout="this.style.boxShadow='0 3px 14px rgba(201,169,110,0.28)';this.style.transform='translateY(0)'">

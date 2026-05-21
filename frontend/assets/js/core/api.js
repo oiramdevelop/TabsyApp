@@ -10,9 +10,35 @@ function headers(extra = {}) {
     const token = localStorage.getItem('tabsy_token');
     return {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...extra,
     };
+}
+
+// Helper para subida de ficheros (multipart/form-data)
+async function upload(endpoint, file, fieldName) {
+    const token = localStorage.getItem('tabsy_token');
+    const formData = new FormData();
+    formData.append(fieldName, file);
+
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        const msg = data.message || data.error || 'Error desconocido';
+        const err = new Error(msg);
+        err.status  = res.status;
+        err.payload = data;
+        throw err;
+    }
+    return data;
 }
 
 // Helper interno: procesa la respuesta y lanza error si no es ok
@@ -26,7 +52,12 @@ async function request(method, endpoint, body = null) {
     if (!res.ok) {
         // Laravel devuelve errores en data.message o data.error
         const msg = data.message || data.error || 'Error desconocido';
-        throw new Error(msg);
+        const err = new Error(msg);
+        // Adjuntamos info adicional (código, status, payload completo)
+        err.status  = res.status;
+        err.code    = data.code;
+        err.payload = data;
+        throw err;
     }
 
     return data;
@@ -39,6 +70,7 @@ export const api = {
         register: (name, email, password, password_confirmation) => request('POST', '/register', { name, email, password, password_confirmation }),
         logout:   ()                       => request('POST', '/logout'),
         me:       ()                       => request('GET',  '/me'),
+        resendVerification: (email)        => request('POST', '/email/resend', { email }),
     },
 
     // ─── BARES ───────────────────────────────────────────────────────────────
@@ -72,6 +104,12 @@ export const api = {
         porBar:       (barId)       => request('GET',   `/bares/${barId}/reservas`),
         cambiarEstado:(id, estado)  => request('PATCH', `/reservas/${id}/estado`,        { estado }),
         todas:        ()            => request('GET',   '/reservas'),
+    },
+
+    // ─── PERFIL ──────────────────────────────────────────────────────────────
+    perfil: {
+        update:       (name)  => request('PUT',  '/perfil',         { name }),
+        uploadAvatar: (file)  => upload('/perfil/avatar', file, 'avatar'),
     },
 
     // ─── USUARIOS (solo superadmin) ───────────────────────────────────────────

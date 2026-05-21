@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tabsy — Verificación de cuenta</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --navy:#0f2240; --blue:#1a3a6b; --steel:#4a6fa5; --sand:#c9a96e; --cream:#f5f0e8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    h1,h2 { font-family: 'Playfair Display', serif; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp 0.6s ease both; }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(15,34,64,0.08);
+    }
+    .icon-circle {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      color: white;
+      text-decoration: none;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 32px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(15,34,64,0.3); }
+
+    .btn-secondary {
+      display: inline-block;
+      background: transparent;
+      color: var(--navy);
+      border: 1.5px solid rgba(15,34,64,0.15);
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: rgba(15,34,64,0.04); }
+  </style>
+</head>
+<body>
+
+<div class="card fade-up">
+  <div id="vista-pending" class="hidden">
+    <div class="icon-circle" style="background:#fef3c7;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold mb-3" style="color:var(--navy);">Revisa tu bandeja de entrada</h1>
+    <p class="text-sm mb-2" style="color:rgba(15,34,64,0.6);">Te hemos enviado un correo a</p>
+    <p class="font-semibold mb-6" id="email-pending" style="color:var(--navy);">—</p>
+    <p class="text-sm mb-8" style="color:rgba(15,34,64,0.5);">
+      Pulsa el enlace que encontrarás dentro para activar tu cuenta. El enlace caduca en 60 minutos.
+    </p>
+    <button id="btn-reenviar-pending" class="btn-secondary">Reenviar correo</button>
+  </div>
+
+  <div id="vista-verified" class="hidden">
+    <div class="icon-circle" style="background:#d1fae5;">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#065f46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold mb-3" style="color:var(--navy);">¡Cuenta verificada!</h1>
+    <p class="text-sm mb-8" style="color:rgba(15,34,64,0.6);">
+      Tu correo ha sido confirmado. Ya puedes iniciar sesión y empezar a reservar mesa.
+    </p>
+    <a href="/pages/auth/auth.html" class="btn-primary">Iniciar sesión</a>
+  </div>
+
+  <div id="vista-already" class="hidden">
+    <div class="icon-circle" style="background:#dbeafe;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold mb-3" style="color:var(--navy);">Tu cuenta ya estaba verificada</h1>
+    <p class="text-sm mb-8" style="color:rgba(15,34,64,0.6);">
+      Ya puedes iniciar sesión cuando quieras.
+    </p>
+    <a href="/pages/auth/auth.html" class="btn-primary">Iniciar sesión</a>
+  </div>
+
+  <div id="vista-invalid" class="hidden">
+    <div class="icon-circle" style="background:#fee2e2;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="15" y1="9" x2="9" y2="15"/>
+        <line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold mb-3" style="color:var(--navy);">Enlace caducado o inválido</h1>
+    <p class="text-sm mb-8" style="color:rgba(15,34,64,0.6);">
+      El enlace ya no es válido. Introduce tu correo para enviarte uno nuevo.
+    </p>
+    <input id="email-reenvio" type="email" placeholder="tucorreo@ejemplo.com"
+           style="width:100%;border:1.5px solid rgba(15,34,64,0.12);border-radius:12px;padding:13px 16px;font-size:0.95rem;margin-bottom:16px;outline:none;" />
+    <button id="btn-reenviar-invalid" class="btn-primary">Enviarme un nuevo enlace</button>
+    <p class="text-xs mt-5">
+      <a href="/pages/auth/auth.html" style="color:var(--steel);">Volver al inicio de sesión</a>
+    </p>
+  </div>
+</div>
+
+<div id="tabsy-loader"></div>
+
+<script type="module" src="/assets/js/pages/verify.js"></script>
+</body>
+</html>

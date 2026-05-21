@@ -21,14 +21,15 @@ class DatabaseSeeder extends Seeder
             'email'    => 'admin@tabsy.com',
             'password' => Hash::make('password123'),
             'role'     => 'superadmin',
+            'email_verified_at'  => now(),
         ]);
 
         $clientes = [
-            User::create(['name' => 'Ana García',    'email' => 'ana@tabsy.com',    'password' => Hash::make('password123'), 'role' => 'cliente']),
-            User::create(['name' => 'Carlos Ruiz',   'email' => 'carlos@tabsy.com', 'password' => Hash::make('password123'), 'role' => 'cliente']),
-            User::create(['name' => 'Lucía Moreno',  'email' => 'lucia@tabsy.com',  'password' => Hash::make('password123'), 'role' => 'cliente']),
-            User::create(['name' => 'Pedro Sánchez', 'email' => 'pedro@tabsy.com',  'password' => Hash::make('password123'), 'role' => 'cliente']),
-            User::create(['name' => 'María Jiménez', 'email' => 'maria@tabsy.com',  'password' => Hash::make('password123'), 'role' => 'cliente']),
+            User::create(['name' => 'Ana García',    'email' => 'ana@tabsy.com',    'password' => Hash::make('password123'), 'role' => 'cliente', 'email_verified_at' => now()]),
+            User::create(['name' => 'Carlos Ruiz',   'email' => 'carlos@tabsy.com', 'password' => Hash::make('password123'), 'role' => 'cliente', 'email_verified_at' => now()]),
+            User::create(['name' => 'Lucía Moreno',  'email' => 'lucia@tabsy.com',  'password' => Hash::make('password123'), 'role' => 'cliente', 'email_verified_at' => now()]),
+            User::create(['name' => 'Pedro Sánchez', 'email' => 'pedro@tabsy.com',  'password' => Hash::make('password123'), 'role' => 'cliente', 'email_verified_at' => now()]),
+            User::create(['name' => 'María Jiménez', 'email' => 'maria@tabsy.com',  'password' => Hash::make('password123'), 'role' => 'cliente', 'email_verified_at' => now()]),
         ];
 
         // ── BARES ───────────────────────────────────────────────────────────────
@@ -50,9 +51,9 @@ class DatabaseSeeder extends Seeder
 
         // ── ADMINS DE BAR ───────────────────────────────────────────────────────
 
-        User::create(['name' => 'Admin Rincón',    'email' => 'admin.rincon@tabsy.com',   'password' => Hash::make('password123'), 'role' => 'bar_admin', 'bar_id' => $bares[0]->id]);
-        User::create(['name' => 'Admin Puerto',    'email' => 'admin.puerto@tabsy.com',   'password' => Hash::make('password123'), 'role' => 'bar_admin', 'bar_id' => $bares[1]->id]);
-        User::create(['name' => 'Admin Caracoles', 'email' => 'admin.caracoles@tabsy.com','password' => Hash::make('password123'), 'role' => 'bar_admin', 'bar_id' => $bares[2]->id]);
+        User::create(['name' => 'Admin Rincón',    'email' => 'admin.rincon@tabsy.com',   'password' => Hash::make('password123'), 'role' => 'bar_admin', 'bar_id' => $bares[0]->id, 'email_verified_at' => now()]);
+        User::create(['name' => 'Admin Puerto',    'email' => 'admin.puerto@tabsy.com',   'password' => Hash::make('password123'), 'role' => 'bar_admin', 'bar_id' => $bares[1]->id, 'email_verified_at' => now()]);
+        User::create(['name' => 'Admin Caracoles', 'email' => 'admin.caracoles@tabsy.com','password' => Hash::make('password123'), 'role' => 'bar_admin', 'bar_id' => $bares[2]->id, 'email_verified_at' => now()]);
 
         // ── MESAS ───────────────────────────────────────────────────────────────
 

@@ -2,12 +2,44 @@
 //  login.js — Lógica de login y registro
 // ============================================================
 
-import { auth } from '../core/auth.js';
-import { toast } from '../components/toast.js';
+import { api }    from '../core/api.js';
+import { auth }   from '../core/auth.js';
+import { toast }  from '../components/toast.js';
 import { loader } from '../components/loader.js';
 
 // Si ya está logueado, redirige a su panel
 if (auth.isLoggedIn()) auth.redirectByRole();
+
+// ─── Helpers UI para el caso "email no verificado" ─────────────
+function mostrarBloqueVerificacion(email) {
+    const cont = document.getElementById('aviso-verificacion');
+    if (!cont) return;
+    cont.dataset.email = email;
+    cont.classList.remove('hidden');
+}
+
+async function reenviarVerificacion(email) {
+    loader.show();
+    try {
+        const data = await api.auth.resendVerification(email);
+        toast(data.message || 'Te hemos reenviado el correo.', 'success');
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        loader.hide();
+    }
+}
+
+// Botón "reenviar" del bloque de aviso
+document.getElementById('btn-reenviar-verif')?.addEventListener('click', () => {
+    const cont = document.getElementById('aviso-verificacion');
+    const email = cont?.dataset.email || document.getElementById('login-email').value;
+    if (!email) {
+        toast('Introduce tu correo arriba primero', 'error');
+        return;
+    }
+    reenviarVerificacion(email);
+});
 
 // ─── LOGIN ───────────────────────────────────────────────────
 document.getElementById('form-login')?.addEventListener('submit', async (e) => {
@@ -15,13 +47,21 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     const email    = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
 
+    // Ocultamos avisos previos
+    document.getElementById('aviso-verificacion')?.classList.add('hidden');
+
     loader.show();
     try {
         await auth.login(email, password);
         toast('¡Bienvenido a Tabsy!', 'success');
         setTimeout(() => auth.redirectByRole(), 800);
     } catch (err) {
-        toast(err.message, 'error');
+        if (err.code === 'email_not_verified') {
+            mostrarBloqueVerificacion(err.payload?.email || email);
+            toast('Verifica tu correo antes de entrar', 'error');
+        } else {
+            toast(err.message, 'error');
+        }
     } finally {
         loader.hide();
     }
@@ -42,13 +82,12 @@ document.getElementById('form-register')?.addEventListener('submit', async (e) =
 
     loader.show();
     try {
-        const { token, user } = await import('../core/api.js').then(m =>
-            m.api.auth.register(name, email, password, confirm)
-        );
-        auth.setToken(token);
-        auth.setUser(user);
-        toast('Cuenta creada correctamente. Bienvenido.', 'success');
-        setTimeout(() => auth.redirectByRole(), 800);
+        // { message, email }
+        await api.auth.register(name, email, password, confirm);
+        toast('Cuenta creada. Revisa tu correo.', 'success');
+        setTimeout(() => {
+            window.location.href = '/pages/auth/verify.html?status=pending&email=' + encodeURIComponent(email);
+        }, 900);
     } catch (err) {
         toast(err.message, 'error');
     } finally {

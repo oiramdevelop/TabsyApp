@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PerfilController;
 use App\Http\Controllers\Api\BarController;
 use App\Http\Controllers\Api\MesaController;
 use App\Http\Controllers\Api\ResenaController;
@@ -11,6 +12,11 @@ use Illuminate\Support\Facades\Route;
 // ─── PÚBLICAS (sin token) ────────────────────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
+
+// ─── VERIFICACIÓN DE EMAIL ───────────────────────────────────────────────────
+Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->name('verification.verify');
+Route::post('/email/resend', [AuthController::class, 'resendVerification']);
 
 Route::get('/bares',                      [BarController::class,  'index']);
 Route::get('/bares/{bar}',                [BarController::class,  'show']);
@@ -24,15 +30,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me',      [AuthController::class, 'me']);
 
+    // ── PERFIL ───────────────────────────────────────────────────
+    Route::put('/perfil',         [PerfilController::class, 'update']);
+    Route::post('/perfil/avatar', [PerfilController::class, 'uploadAvatar']);
+
     // ── CLIENTE ──────────────────────────────────────────────────────────────
     Route::get('/mis-reservas',                   [ReservaController::class, 'misReservas']);
     Route::post('/reservas',                      [ReservaController::class, 'store']);
     Route::patch('/reservas/{reserva}/cancelar',  [ReservaController::class, 'cancelar']);
 
-    // Reseñas (s
-    // 
-    // 
-    // olo usuarios con reserva confirmada en ese bar)
+    // Reseñas (solo usuarios con reserva confirmada en ese bar)
     Route::post('/resenas',                       [ResenaController::class, 'store']);
     Route::delete('/resenas/{resena}',            [ResenaController::class, 'destroy']);
 

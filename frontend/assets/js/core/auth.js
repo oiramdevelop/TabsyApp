@@ -33,7 +33,7 @@ export const auth = {
         try { await api.auth.logout(); } catch (_) {}
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
-        window.location.href = '/pages/auth/login.html';
+        window.location.href = '/pages/auth/auth.html';
     },
 
     // ─── ROLES ───────────────────────────────────────────────
@@ -45,7 +45,7 @@ export const auth = {
     // Llama esto al inicio de páginas protegidas
     requireLogin: () => {
         if (!auth.isLoggedIn()) {
-            window.location.href = '/pages/auth/login.html';
+            window.location.href = '/pages/auth/auth.html';
             return false;
         }
         return true;
@@ -53,7 +53,7 @@ export const auth = {
 
     requireSuperAdmin: () => {
         if (!auth.isLoggedIn() || !auth.isSuperAdmin()) {
-            window.location.href = '/pages/auth/login.html';
+            window.location.href = '/pages/auth/auth.html';
             return false;
         }
         return true;
@@ -61,7 +61,7 @@ export const auth = {
 
     requireBarAdmin: () => {
         if (!auth.isLoggedIn() || (!auth.isBarAdmin() && !auth.isSuperAdmin())) {
-            window.location.href = '/pages/auth/login.html';
+            window.location.href = '/pages/auth/auth.html';
             return false;
         }
         return true;
