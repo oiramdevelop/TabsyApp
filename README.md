@@ -56,11 +56,17 @@ Tabsy ofrece reserva web en menos de tres clics, disponibilidad por mesa y franj
 
 ## Capturas
 
-> Sustituir estos placeholders por capturas reales antes de la entrega final.
+**Landing con sesión activa** — el nav y el CTA se adaptan al usuario logueado en vez de tratarlo como invitado:
 
-| Cliente | Bar admin | Superadmin |
-|---------|-----------|------------|
-| ![Cliente](docs/screenshots/cliente.png) | ![Bar admin](docs/screenshots/bar_admin.png) | ![Superadmin](docs/screenshots/superadmin.png) |
+![Landing](docs/screenshots/landing.png)
+
+**Panel del bar_admin, plan Free** — el límite del plan no es solo una etiqueta: bloquea de verdad la sección de estadísticas con un aviso claro de qué se desbloquea en Pro:
+
+![Panel bar_admin](docs/screenshots/bar_admin.png)
+
+**Panel del superadmin** — estadísticas globales servidas por el microservicio Python (`stats/main.py`), independiente de la API principal:
+
+![Panel superadmin](docs/screenshots/superadmin.png)
 
 ---
 
