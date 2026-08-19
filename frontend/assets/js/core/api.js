@@ -113,6 +113,11 @@ export const api = {
         uploadAvatar: (file)  => upload('/perfil/avatar', file, 'avatar'),
     },
 
+    // ─── PLANES ──────────────────────────────────────────────────────────────
+    planes: {
+        getAll: () => request('GET', '/planes'),
+    },
+
     // ─── USUARIOS (solo superadmin) ───────────────────────────────────────────
     usuarios: {
         getAll:  ()         => request('GET',    '/usuarios'),
