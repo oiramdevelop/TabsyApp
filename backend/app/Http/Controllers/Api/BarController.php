@@ -39,11 +39,8 @@ class BarController extends Controller
     // BarAdmin / SuperAdmin: estadísticas del bar
     public function stats(Request $request, $barId)
     {
-        $user = $request->user();
-
-        if ($user->isBarAdmin() && $user->bar_id != $barId) {
-            return response()->json(['error' => 'No autorizado.'], 403);
-        }
+        $bar = Bar::findOrFail($barId);
+        $this->authorize('manage', $bar);
 
         $reservas = Reserva::where('bar_id', $barId)->with('user')->get();
 
@@ -85,11 +82,7 @@ class BarController extends Controller
     // SuperAdmin / BarAdmin (solo su bar): editar bar
     public function update(Request $request, Bar $bar)
     {
-        $user = $request->user();
-
-        if ($user->isBarAdmin() && $user->bar_id !== $bar->id) {
-            return response()->json(['error' => 'No autorizado.'], 403);
-        }
+        $this->authorize('manage', $bar);
 
         $data = $request->validate([
             'nombre'           => 'sometimes|string|max:255',

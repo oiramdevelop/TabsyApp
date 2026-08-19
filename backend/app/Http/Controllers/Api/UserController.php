@@ -31,6 +31,8 @@ class UserController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
+        $this->sincronizarBarPivote($user);
+
         return response()->json($user->load('bar'), 201);
     }
 
@@ -50,6 +52,8 @@ class UserController extends Controller
         }
 
         $user->update($data);
+        $this->sincronizarBarPivote($user);
+
         return response()->json($user->load('bar'));
     }
 
@@ -58,5 +62,15 @@ class UserController extends Controller
     {
         $user->delete();
         return response()->json(['message' => 'Usuario eliminado.']);
+    }
+
+    // Mantiene la tabla pivote bar_user en línea con la columna users.bar_id
+    private function sincronizarBarPivote(User $user): void
+    {
+        if ($user->role === 'bar_admin' && $user->bar_id) {
+            $user->bares()->sync([$user->bar_id]);
+        } else {
+            $user->bares()->sync([]);
+        }
     }
 }

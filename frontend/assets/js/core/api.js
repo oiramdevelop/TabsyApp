@@ -68,6 +68,7 @@ export const api = {
     auth: {
         login:    (email, password)        => request('POST', '/login',    { email, password }),
         register: (name, email, password, password_confirmation) => request('POST', '/register', { name, email, password, password_confirmation }),
+        registerBar: (payload)             => request('POST', '/register-bar', payload),
         logout:   ()                       => request('POST', '/logout'),
         me:       ()                       => request('GET',  '/me'),
         resendVerification: (email)        => request('POST', '/email/resend', { email }),

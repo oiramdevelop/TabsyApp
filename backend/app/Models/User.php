@@ -50,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function reservas() { return $this->hasMany(Reserva::class, 'user_id'); }
     public function bar()      { return $this->belongsTo(Bar::class, 'bar_id'); }
+    public function bares()    { return $this->belongsToMany(Bar::class, 'bar_user')->withTimestamps(); }
 
     /**
      * Override del envío de verificación para usar nuestro Mailable

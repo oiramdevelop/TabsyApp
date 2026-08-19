@@ -95,6 +95,44 @@ document.getElementById('form-register')?.addEventListener('submit', async (e) =
     }
 });
 
+// ─── REGISTRA TU BAR ─────────────────────────────────────────
+document.getElementById('form-registro-bar')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = document.getElementById('rb-password').value;
+    const confirm  = document.getElementById('rb-confirm').value;
+
+    if (password !== confirm) {
+        toast('Las contraseñas no coinciden', 'error');
+        return;
+    }
+
+    const payload = {
+        name:                 document.getElementById('rb-nombre').value,
+        email:                document.getElementById('rb-email').value,
+        password,
+        password_confirmation: confirm,
+        bar_nombre:           document.getElementById('rb-bar-nombre').value,
+        bar_direccion:        document.getElementById('rb-bar-direccion').value,
+        bar_ciudad:           document.getElementById('rb-bar-ciudad').value,
+        bar_telefono:         document.getElementById('rb-bar-telefono').value || null,
+        bar_descripcion:      document.getElementById('rb-bar-descripcion').value || null,
+        google_place_id:      document.getElementById('rb-bar-place-id').value || null,
+    };
+
+    loader.show();
+    try {
+        await api.auth.registerBar(payload);
+        toast('Cuenta y bar creados. Revisa tu correo.', 'success');
+        setTimeout(() => {
+            window.location.href = '/pages/auth/verify.html?status=pending&email=' + encodeURIComponent(payload.email);
+        }, 900);
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        loader.hide();
+    }
+});
+
 // ─── Toggle entre login y registro ───────────────────────────
 document.getElementById('toggle-register')?.addEventListener('click', () => {
     document.getElementById('section-login').classList.add('hidden');

@@ -56,6 +56,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: tabsy_db
@@ -76,6 +77,8 @@ services:
       MYSQL_ROOT_PASSWORD: toor
     ports:
       - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ptoor"]
       interval: 5s
@@ -85,3 +88,4 @@ services:
 volumes:
   tailwind_node_modules:
   vendor_cache:
+  mysql_data:

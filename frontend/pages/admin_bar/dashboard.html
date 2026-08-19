@@ -115,6 +115,10 @@
 
   <!-- ── DASHBOARD ── -->
   <div id="panel-dashboard" class="panel active fade-up">
+    <div id="banner-pendiente-aprobacion" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:14px;padding:14px 18px;margin-bottom:24px;font-size:0.88rem;color:#92400e;align-items:center;gap:10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Tu bar está pendiente de aprobación por el equipo de Tabsy. Mientras tanto puedes configurar tus mesas — no aparecerá en el listado público ni podrá recibir reservas hasta que se apruebe.</span>
+    </div>
     <div class="mb-8 flex items-start justify-between">
       <div>
         <h1 class="text-3xl font-black mb-1" id="saludo">Bienvenido</h1>
@@ -409,6 +413,7 @@
     ]);
 
     document.getElementById('bar-nombre-sidebar').textContent = bar.nombre;
+    document.getElementById('banner-pendiente-aprobacion').style.display = bar.activo ? 'none' : 'flex';
 
     // Stats dashboard
     document.getElementById('stat-total').textContent      = stats.total;

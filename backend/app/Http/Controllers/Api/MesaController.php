@@ -35,10 +35,7 @@ class MesaController extends Controller
     // SuperAdmin / BarAdmin: crear mesa
     public function store(Request $request, Bar $bar)
     {
-        $user = $request->user();
-        if ($user->isBarAdmin() && $user->bar_id !== $bar->id) {
-            return response()->json(['error' => 'No autorizado.'], 403);
-        }
+        $this->authorize('manage', $bar);
 
         $data = $request->validate([
             'numero'    => 'required|string',
@@ -53,10 +50,8 @@ class MesaController extends Controller
     // SuperAdmin / BarAdmin: editar mesa
     public function update(Request $request, Bar $bar, Mesa $mesa)
     {
-        $user = $request->user();
-        if ($user->isBarAdmin() && $user->bar_id !== $bar->id) {
-            return response()->json(['error' => 'No autorizado.'], 403);
-        }
+        $this->authorize('manage', $bar);
+        abort_unless($mesa->bar_id === $bar->id, 404);
 
         $data = $request->validate([
             'numero'    => 'sometimes|string',
@@ -72,10 +67,8 @@ class MesaController extends Controller
     // SuperAdmin / BarAdmin: borrar mesa
     public function destroy(Request $request, Bar $bar, Mesa $mesa)
     {
-        $user = $request->user();
-        if ($user->isBarAdmin() && $user->bar_id !== $bar->id) {
-            return response()->json(['error' => 'No autorizado.'], 403);
-        }
+        $this->authorize('manage', $bar);
+        abort_unless($mesa->bar_id === $bar->id, 404);
 
         $mesa->delete();
         return response()->json(['message' => 'Mesa eliminada.']);

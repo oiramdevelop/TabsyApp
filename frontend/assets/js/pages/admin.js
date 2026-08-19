@@ -33,11 +33,18 @@ function renderBares(bares) {
     container.innerHTML = bares.map(b => `
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex justify-between items-start">
             <div>
-                <h3 class="font-bold text-gray-800">${b.nombre}</h3>
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-gray-800">${b.nombre}</h3>
+                    ${!b.activo ? '<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Pendiente de aprobación</span>' : ''}
+                </div>
                 <p class="text-sm text-gray-500">${b.direccion}, ${b.ciudad}</p>
                 <p class="text-xs text-gray-400 mt-1">${b.horario_apertura ?? ''} – ${b.horario_cierre ?? ''}</p>
             </div>
             <div class="flex gap-2">
+                ${!b.activo ? `
+                <button data-id="${b.id}" class="btn-aprobar-bar text-xs px-3 py-1 rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition">
+                    Aprobar
+                </button>` : ''}
                 <button data-id="${b.id}" class="btn-edit-bar text-xs px-3 py-1 rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50 transition">
                     Editar
                 </button>
@@ -47,6 +54,18 @@ function renderBares(bares) {
             </div>
         </div>
     `).join('');
+
+    container.querySelectorAll('.btn-aprobar-bar').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            try {
+                await api.bares.update(btn.dataset.id, { activo: true });
+                toast('Bar aprobado, ya es visible públicamente', 'success');
+                cargarBares();
+            } catch (err) {
+                toast(err.message, 'error');
+            }
+        });
+    });
 
     container.querySelectorAll('.btn-del-bar').forEach(btn => {
         btn.addEventListener('click', async () => {

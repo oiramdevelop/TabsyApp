@@ -3,10 +3,44 @@
 // ============================================================
 
 import { api }    from '../core/api.js';
+import { auth }   from '../core/auth.js';
 import { toast }  from '../components/toast.js';
 import { loader } from '../components/loader.js';
 
 let _todosLosBares = [];
+
+// Si hay sesión activa, la landing deja de comportarse como si el
+// visitante fuera anónimo: el botón de acceso pasa a ser su perfil.
+function actualizarNavSegunSesion() {
+    const user = auth.getUser();
+    if (!user) return;
+
+    const destino = user.role === 'superadmin' ? '/pages/admin/dashboard.html'
+        : user.role === 'bar_admin' ? '/pages/admin_bar/dashboard.html'
+        : '/pages/cliente/reservas.html';
+    const etiqueta = user.role === 'cliente' ? 'Mis reservas' : 'Mi panel';
+    const initial = user.name.charAt(0).toUpperCase();
+
+    const desktopLink = document.getElementById('nav-login-link');
+    if (desktopLink) {
+        desktopLink.outerHTML = `
+            <a href="/pages/perfil.html" style="display:flex;align-items:center;gap:9px;text-decoration:none;">
+                <span style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c9a96e,#b8924a);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:800;color:white;">${initial}</span>
+                <span style="font-size:0.82rem;color:rgba(255,255,255,0.6);">Hola, <strong style="color:white;">${user.name.split(' ')[0]}</strong></span>
+            </a>
+            <a href="${destino}" style="background:linear-gradient(135deg,#c9a96e,#b8924a);color:white;padding:10px 22px;border-radius:10px;font-weight:600;font-size:0.875rem;text-decoration:none;box-shadow:0 3px 14px rgba(201,169,110,0.28);letter-spacing:0.01em;">${etiqueta}</a>
+        `;
+    }
+
+    const mobileLink = document.getElementById('mobile-login-link');
+    if (mobileLink) {
+        mobileLink.outerHTML = `
+            <a href="/pages/perfil.html" style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.75);text-decoration:none;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07);display:block;">Hola, ${user.name.split(' ')[0]}</a>
+            <a href="${destino}" style="display:block;background:linear-gradient(135deg,#c9a96e,#b8924a);color:white;padding:14px 22px;border-radius:12px;font-weight:700;font-size:0.95rem;text-decoration:none;text-align:center;margin-top:6px;box-shadow:0 4px 16px rgba(201,169,110,0.3);">${etiqueta} →</a>
+        `;
+    }
+}
+actualizarNavSegunSesion();
 
 async function cargarBares() {
     loader.show();

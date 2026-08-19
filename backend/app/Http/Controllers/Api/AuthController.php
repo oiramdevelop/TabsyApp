@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bar;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
@@ -35,6 +37,57 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Cuenta creada. Te hemos enviado un correo para verificarla.',
+            'email'   => $user->email,
+        ], 201);
+    }
+
+    // Alta en autoservicio: crea la cuenta del dueño + su bar (pendiente de aprobación)
+    public function registerBar(Request $request)
+    {
+        $data = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+
+            'bar_nombre'      => 'required|string|max:255',
+            'bar_direccion'   => 'required|string',
+            'bar_ciudad'      => 'required|string',
+            'bar_telefono'    => 'nullable|string',
+            'bar_descripcion' => 'nullable|string',
+            'google_place_id' => 'nullable|string',
+        ]);
+
+        $user = DB::transaction(function () use ($data) {
+            $bar = Bar::create([
+                'nombre'          => $data['bar_nombre'],
+                'direccion'       => $data['bar_direccion'],
+                'ciudad'          => $data['bar_ciudad'],
+                'telefono'        => $data['bar_telefono'] ?? null,
+                'descripcion'     => $data['bar_descripcion'] ?? null,
+                'google_place_id' => $data['google_place_id'] ?? null,
+                'activo'          => false, // pendiente de aprobación por el superadmin
+            ]);
+
+            $user = User::create([
+                'name'     => $data['name'],
+                'email'    => $data['email'],
+                'password' => Hash::make($data['password']),
+                'role'     => 'bar_admin',
+                'bar_id'   => $bar->id,
+            ]);
+            $user->bares()->sync([$bar->id]);
+
+            return $user;
+        });
+
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            \Log::error('Error enviando email de verificación: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'message' => 'Cuenta y bar creados. Te hemos enviado un correo para verificar tu cuenta.',
             'email'   => $user->email,
         ], 201);
     }

@@ -130,6 +130,7 @@
     <div class="flex gap-1 p-1 rounded-xl mb-8" style="background:rgba(15,34,64,0.06);">
       <button class="tab-btn active" id="tab-login" onclick="showTab('login')">Iniciar sesión</button>
       <button class="tab-btn" id="tab-register" onclick="showTab('register')">Crear cuenta</button>
+      <button class="tab-btn" id="tab-bar" onclick="showTab('bar')">¿Tienes un bar?</button>
     </div>
 
     <!-- ── LOGIN ── -->
@@ -211,6 +212,65 @@
       </p>
     </div>
 
+    <!-- ── REGISTRA TU BAR ── -->
+    <div id="section-bar" class="hidden">
+      <h2 class="text-2xl font-bold mb-1" style="color:var(--navy);">Registra tu bar</h2>
+      <p class="text-sm mb-8" style="color:rgba(15,34,64,0.45);">Crea tu cuenta y da de alta tu bar en Tabsy. Un momento y ya estás dentro.</p>
+
+      <form id="form-registro-bar" class="flex flex-col gap-5">
+        <p style="font-size:0.72rem;font-weight:700;color:var(--sand);letter-spacing:0.08em;text-transform:uppercase;">Tus datos</p>
+        <div>
+          <label for="rb-nombre">Nombre completo</label>
+          <input id="rb-nombre" type="text" class="form-input" placeholder="Tu nombre" required />
+        </div>
+        <div>
+          <label for="rb-email">Correo electrónico</label>
+          <input id="rb-email" type="email" class="form-input" placeholder="tucorreo@ejemplo.com" required />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="rb-password">Contraseña</label>
+            <input id="rb-password" type="password" class="form-input" placeholder="Mínimo 8 caracteres" required />
+          </div>
+          <div>
+            <label for="rb-confirm">Confirmar</label>
+            <input id="rb-confirm" type="password" class="form-input" placeholder="Repite la contraseña" required />
+          </div>
+        </div>
+
+        <p style="font-size:0.72rem;font-weight:700;color:var(--sand);letter-spacing:0.08em;text-transform:uppercase;margin-top:8px;">Tu bar</p>
+        <div>
+          <label for="rb-bar-nombre">Nombre del bar <span style="opacity:0.6;font-weight:400;text-transform:none;letter-spacing:0;">· busca en Google para autocompletar</span></label>
+          <input id="rb-bar-nombre" type="text" class="form-input" placeholder="Buscar bar en Google..." required autocomplete="off" />
+          <input type="hidden" id="rb-bar-place-id" />
+        </div>
+        <div>
+          <label for="rb-bar-direccion">Dirección</label>
+          <input id="rb-bar-direccion" type="text" class="form-input" placeholder="Calle Mayor, 12" required />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="rb-bar-ciudad">Ciudad</label>
+            <input id="rb-bar-ciudad" type="text" class="form-input" placeholder="Sanlúcar de Barrameda" required />
+          </div>
+          <div>
+            <label for="rb-bar-telefono">Teléfono</label>
+            <input id="rb-bar-telefono" type="tel" class="form-input" placeholder="956 000 000" />
+          </div>
+        </div>
+        <div>
+          <label for="rb-bar-descripcion">Descripción <span style="opacity:0.6;font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+          <textarea id="rb-bar-descripcion" class="form-input" rows="2" placeholder="Breve descripción de tu bar..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary mt-2">Crear mi bar en Tabsy</button>
+      </form>
+
+      <p class="text-xs text-center mt-5" style="color:rgba(15,34,64,0.4);">
+        Tu bar quedará pendiente de aprobación antes de aparecer en el listado público.
+      </p>
+    </div>
+
   </div>
 </div>
 
@@ -228,13 +288,53 @@
   }
 
   function showTab(tab) {
-    const isLogin = tab === 'login';
-    document.getElementById('section-login').classList.toggle('hidden', !isLogin);
-    document.getElementById('section-register').classList.toggle('hidden', isLogin);
-    document.getElementById('tab-login').classList.toggle('active', isLogin);
-    document.getElementById('tab-register').classList.toggle('active', !isLogin);
+    ['login', 'register', 'bar'].forEach(t => {
+      document.getElementById('section-' + t).classList.toggle('hidden', t !== tab);
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    });
+    if (tab === 'bar') cargarGooglePlacesRegistro();
   }
 </script>
 <script type="module" src="/assets/js/pages/login.js"></script>
+
+<!-- Google Places: autocompletar nombre del bar en "Registra tu bar" -->
+<script>
+  const MAPS_KEY = 'AIzaSyAJ446VxneqgPIzM0aSAEhTGZlU7_6MU8w';
+  let _placesRegistroLoaded = false;
+
+  function cargarGooglePlacesRegistro() {
+    if (_placesRegistroLoaded) return;
+    _placesRegistroLoaded = true;
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places&callback=initRegistroPlaces&language=es&region=es`;
+    s.async = true; s.defer = true;
+    document.head.appendChild(s);
+  }
+
+  window.initRegistroPlaces = function() {
+    const input = document.getElementById('rb-bar-nombre');
+    if (!input || !window.google) return;
+    const ac = new google.maps.places.Autocomplete(input, {
+      types: ['establishment'],
+      componentRestrictions: { country: 'es' },
+      fields: ['name', 'place_id', 'formatted_address', 'address_components', 'formatted_phone_number'],
+    });
+    ac.addListener('place_changed', () => {
+      const p = ac.getPlace();
+      if (!p.place_id) return;
+      let calle = '', ciudad = '', numero = '';
+      (p.address_components || []).forEach(c => {
+        if (c.types.includes('route'))         calle  = c.long_name;
+        if (c.types.includes('street_number')) numero = c.long_name;
+        if (c.types.includes('locality'))      ciudad = c.long_name;
+      });
+      document.getElementById('rb-bar-nombre').value    = p.name || '';
+      document.getElementById('rb-bar-place-id').value  = p.place_id;
+      document.getElementById('rb-bar-direccion').value = numero ? `${calle}, ${numero}` : (calle || p.formatted_address?.split(',')[0] || '');
+      document.getElementById('rb-bar-ciudad').value     = ciudad;
+      if (p.formatted_phone_number) document.getElementById('rb-bar-telefono').value = p.formatted_phone_number;
+    });
+  };
+</script>
 </body>
 </html>

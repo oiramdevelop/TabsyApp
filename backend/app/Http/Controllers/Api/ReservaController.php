@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Mail\NuevaReservaMail;
+use App\Models\Bar;
 use App\Models\Mesa;
 use App\Models\Reserva;
 use App\Models\User;
@@ -112,11 +113,8 @@ class ReservaController extends Controller
     // BarAdmin / SuperAdmin: ver reservas de un bar
     public function porBar(Request $request, $barId)
     {
-        $user = $request->user();
-
-        if ($user->isBarAdmin() && $user->bar_id != $barId) {
-            return response()->json(['error' => 'No autorizado.'], 403);
-        }
+        $bar = Bar::findOrFail($barId);
+        $this->authorize('manage', $bar);
 
         $reservas = Reserva::where('bar_id', $barId)
             ->with(['user', 'mesa'])
@@ -129,11 +127,7 @@ class ReservaController extends Controller
     // BarAdmin / SuperAdmin: confirmar o rechazar reserva
     public function cambiarEstado(Request $request, Reserva $reserva)
     {
-        $user = $request->user();
-
-        if ($user->isBarAdmin() && $user->bar_id !== $reserva->bar_id) {
-            return response()->json(['error' => 'No autorizado.'], 403);
-        }
+        $this->authorize('manage', $reserva->bar);
 
         $data = $request->validate([
             'estado' => 'required|in:confirmada,rechazada',

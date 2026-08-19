@@ -21,7 +21,7 @@ class Bar extends Model
 
     public function mesas()    { return $this->hasMany(Mesa::class, 'bar_id'); }
     public function reservas() { return $this->hasMany(Reserva::class, 'bar_id'); }
-    public function admins()   { return $this->hasMany(User::class, 'bar_id')->where('role', 'bar_admin'); }
+    public function admins()   { return $this->belongsToMany(User::class, 'bar_user')->where('role', 'bar_admin'); }
     public function resenas()  { return $this->hasMany(Resena::class, 'bar_id'); }
 
     public function getRatingPromedioAttribute(): ?float
