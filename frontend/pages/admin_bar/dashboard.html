@@ -81,6 +81,7 @@
     </div>
     <span class="text-xs mt-2 block font-semibold" style="color:rgba(201,169,110,0.7);letter-spacing:0.06em;text-transform:uppercase;">Admin Bar</span>
     <span id="bar-nombre-sidebar" class="text-sm font-semibold block mt-1" style="color:white;">Cargando...</span>
+    <span id="bar-plan-sidebar" style="display:none;font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:2px 9px;border-radius:999px;margin-top:6px;"></span>
   </div>
 
   <div class="sidebar-section">General</div>
@@ -193,34 +194,45 @@
       </select>
     </div>
 
-    <!-- Estadísticas del mes (Python) -->
-    <div id="stats-mes-wrap" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white rounded-2xl p-5 border border-black/5">
-        <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1" id="stats-mes-label">Este mes</p>
-        <p class="text-3xl font-black" id="stats-mes-total">—</p>
-        <p class="text-xs text-gray-400 mt-1" id="stats-mes-var"></p>
-      </div>
-      <div class="bg-white rounded-2xl p-5 border border-black/5">
-        <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Tasa confirmación</p>
-        <p class="text-3xl font-black" style="color:#065f46;" id="stats-mes-tasa">—</p>
-        <p class="text-xs text-gray-400 mt-1">del total del mes</p>
-      </div>
-      <div class="bg-white rounded-2xl p-5 border border-black/5">
-        <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Personas esperadas</p>
-        <p class="text-3xl font-black" style="color:var(--steel);" id="stats-mes-personas">—</p>
-        <p class="text-xs text-gray-400 mt-1">reservas confirmadas</p>
-      </div>
-      <div class="bg-white rounded-2xl p-5 border border-black/5">
-        <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Hora pico</p>
-        <p class="text-3xl font-black" style="color:var(--sand);" id="stats-mes-hora">—</p>
-        <p class="text-xs text-gray-400 mt-1">más reservas recibidas</p>
+    <!-- Estadísticas del mes (Python) — solo plan Pro -->
+    <div id="stats-mes-bloqueado" style="display:none;background:linear-gradient(135deg,#0f2240,#1a3a6b);border-radius:18px;padding:28px 32px;margin-bottom:24px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div>
+        <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px;">Plan Pro</p>
+        <h3 style="font-weight:800;font-size:1.15rem;margin-bottom:4px;">Las estadísticas del mes están disponibles en el plan Pro</h3>
+        <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);">Tendencia de reservas, tasa de confirmación, hora pico y más.</p>
       </div>
     </div>
 
-    <!-- Mini gráfico por día -->
-    <div class="bg-white rounded-2xl p-5 border border-black/5 mb-6">
-      <p class="text-sm font-bold mb-4">Reservas por día este mes</p>
-      <div class="chart-bar-wrap" id="chart-por-dia"></div>
+    <div id="seccion-stats-mes">
+      <!-- Estadísticas del mes (Python) -->
+      <div id="stats-mes-wrap" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-5 border border-black/5">
+          <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1" id="stats-mes-label">Este mes</p>
+          <p class="text-3xl font-black" id="stats-mes-total">—</p>
+          <p class="text-xs text-gray-400 mt-1" id="stats-mes-var"></p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-black/5">
+          <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Tasa confirmación</p>
+          <p class="text-3xl font-black" style="color:#065f46;" id="stats-mes-tasa">—</p>
+          <p class="text-xs text-gray-400 mt-1">del total del mes</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-black/5">
+          <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Personas esperadas</p>
+          <p class="text-3xl font-black" style="color:var(--steel);" id="stats-mes-personas">—</p>
+          <p class="text-xs text-gray-400 mt-1">reservas confirmadas</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-black/5">
+          <p class="text-xs font-700 text-gray-400 uppercase tracking-wider mb-1">Hora pico</p>
+          <p class="text-3xl font-black" style="color:var(--sand);" id="stats-mes-hora">—</p>
+          <p class="text-xs text-gray-400 mt-1">más reservas recibidas</p>
+        </div>
+      </div>
+
+      <!-- Mini gráfico por día -->
+      <div class="bg-white rounded-2xl p-5 border border-black/5 mb-6">
+        <p class="text-sm font-bold mb-4">Reservas por día este mes</p>
+        <div class="chart-bar-wrap" id="chart-por-dia"></div>
+      </div>
     </div>
 
     <!-- Tabla de reservas -->
@@ -274,6 +286,7 @@
       <!-- Nueva mesa -->
       <div>
         <h3 class="font-bold text-lg mb-4">Nueva mesa</h3>
+        <div id="aviso-limite-mesas" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:0.85rem;color:#92400e;"></div>
         <div class="bg-white rounded-2xl p-6 border border-black/5">
           <form id="form-mesa" class="flex flex-col gap-4">
             <div>
@@ -399,6 +412,7 @@
 
   // ── Inicializar ────────────────────────────────────────────────
   let _prevPendientes = 0;
+  let barActual = null;
 
   async function init() {
     if (!barId) {
@@ -412,8 +426,16 @@
       api.reservas.porBar(barId),
     ]);
 
+    barActual = bar;
     document.getElementById('bar-nombre-sidebar').textContent = bar.nombre;
     document.getElementById('banner-pendiente-aprobacion').style.display = bar.activo ? 'none' : 'flex';
+
+    const planBadge = document.getElementById('bar-plan-sidebar');
+    const esPro = bar.plan?.nombre === 'pro';
+    planBadge.textContent = bar.plan?.etiqueta ?? 'Free';
+    planBadge.style.background = esPro ? 'rgba(201,169,110,0.2)' : 'rgba(255,255,255,0.08)';
+    planBadge.style.color = esPro ? '#c9a96e' : 'rgba(255,255,255,0.5)';
+    planBadge.style.display = 'inline-block';
 
     // Stats dashboard
     document.getElementById('stat-total').textContent      = stats.total;
@@ -484,8 +506,12 @@
     document.getElementById('edit-descripcion').value= bar.descripcion ?? '';
     document.getElementById('edit-place-id').value   = bar.google_place_id ?? '';
 
-    // Stats del mes (Python)
-    cargarStatsMes();
+    // Stats del mes (Python) — solo disponible en plan Pro
+    const tieneStats = !!bar.plan?.acceso_estadisticas;
+    document.getElementById('seccion-stats-mes').style.display = tieneStats ? '' : 'none';
+    document.getElementById('stats-mes-bloqueado').style.display = tieneStats ? 'none' : 'flex';
+    if (tieneStats) cargarStatsMes();
+
     // Mesas
     cargarMesas();
   }
@@ -661,9 +687,29 @@
     `;
   }
 
+  function actualizarLimiteMesas(totalMesas) {
+    const limite = barActual?.plan?.max_mesas;
+    const btn    = document.querySelector('#form-mesa button[type=submit]');
+    const aviso  = document.getElementById('aviso-limite-mesas');
+    const alcanzado = limite != null && totalMesas >= limite;
+
+    if (btn) {
+      btn.disabled = alcanzado;
+      btn.style.opacity = alcanzado ? '0.5' : '1';
+      btn.style.cursor = alcanzado ? 'not-allowed' : 'pointer';
+    }
+    if (aviso) {
+      aviso.style.display = alcanzado ? 'block' : 'none';
+      if (alcanzado) {
+        aviso.textContent = `Has alcanzado el límite de ${limite} mesas de tu plan ${barActual.plan.etiqueta}. Pásate a Pro para añadir más.`;
+      }
+    }
+  }
+
   async function cargarMesas() {
     try {
       const mesas    = await api.mesas.getByBar(barId);
+      actualizarLimiteMesas(mesas.length);
       const activas  = mesas.filter(m => !!m.activa);
       const inactivas = mesas.filter(m => !m.activa);
 
