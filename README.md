@@ -25,6 +25,7 @@
 - [Capturas](#capturas)
 - [Stack tecnológico](#stack-tecnológico)
 - [Arquitectura](#arquitectura)
+- [Multi-tenancy y modelo SaaS](#multi-tenancy-y-modelo-saas)
 - [Estructura del repositorio](#estructura-del-repositorio)
 - [Requisitos previos](#requisitos-previos)
 - [Instalación y arranque](#instalación-y-arranque)
@@ -116,6 +117,33 @@ Tabsy ofrece reserva web en menos de tres clics, disponibilidad por mesa y franj
 
 ---
 
+## Multi-tenancy y modelo SaaS
+
+Tabsy no está pensado como un directorio de reservas para un solo negocio, sino como una plataforma **multi-tenant**: cada bar es un inquilino independiente, con sus propios administradores, mesas, reservas y plan de suscripción, aislado de los demás dentro de la misma base de datos.
+
+### Aislamiento por bar: `BarPolicy`
+
+Toda acción de gestión (editar el bar, crear/editar/borrar mesas, cambiar el estado de una reserva) pasa por una única autorización centralizada, `App\Policies\BarPolicy::manage()`, en vez de repetir la comprobación "¿este bar_admin es dueño de este bar?" en cada controlador. Esa centralización no es solo estilo: sustituyó **seis comprobaciones inline duplicadas** que dejaban un hueco real — `MesaController::update()`/`destroy()` comprobaban que el bar de la URL fuera del `bar_admin` autenticado, pero nunca que la mesa perteneciera a *ese* bar, permitiendo editar mesas de un bar ajeno conociendo su ID. Queda cubierto por un test de regresión (`tests/Feature/MesaTenantIsolationTest.php`).
+
+### Relación N:M `bar_user`
+
+Un usuario puede tener asignado un bar principal (`users.bar_id`, usado hoy por el panel), pero por debajo existe además una tabla pivote `bar_user` que modela la relación real de un SaaS: varios administradores por bar, o un mismo administrador con varios bares (cadenas). El modelo de datos ya lo soporta; la interfaz para gestionar varios bares desde una sola cuenta es trabajo futuro.
+
+### Alta de tenant en autoservicio
+
+Un dueño de bar no necesita que nadie le dé de alta a mano: `POST /api/register-bar` crea su cuenta (`bar_admin`) y su bar en una única transacción. El bar nace con `activo=false` — el dueño ya puede entrar a su panel y configurar mesas mientras espera, pero no aparece en el listado público ni puede recibir reservas hasta que el superadmin lo aprueba desde su panel.
+
+### Planes y límites
+
+| Plan | Mesas | Estadísticas | Precio |
+|------|:-----:|:-------------:|-------:|
+| **Free** | 5 | ✗ | 0 € |
+| **Pro** | Ilimitadas | ✓ | 29 €/mes |
+
+El límite tampoco es cosmético: `MesaController::store()` cuenta las mesas del bar contra `plan.max_mesas` y responde `402 Payment Required` al superarlo, tanto si el frontend lo intenta como si se llama a la API directamente. No hay pasarela de pago conectada — el cambio de plan lo aplica el superadmin manualmente desde su panel — pero el modelo de datos (`planes`, `bares.plan_id`) y el enforcement en el backend están listos para conectar un proveedor de pagos sin tocar la lógica de negocio.
+
+---
+
 ## Estructura del repositorio
 
 ```
@@ -124,8 +152,9 @@ TabsyApp/
 │   ├── app/
 │   │   ├── Http/Controllers/Api/   # AuthController, BarController, ReservaController, etc.
 │   │   ├── Http/Middleware/        # role.php (middleware de autorización por rol)
+│   │   ├── Policies/                # BarPolicy.php (autorización centralizada por tenant)
 │   │   ├── Mail/                   # Mailables (NuevaReservaMail, VerificarEmailMail, …)
-│   │   └── Models/                 # User, Bar, Mesa, Reserva, Resena
+│   │   └── Models/                 # User, Bar, Mesa, Reserva, Resena, Plan
 │   ├── database/
 │   │   ├── migrations/             # Esquema de la BD versionado
 │   │   └── seeders/                # Datos de prueba
@@ -270,10 +299,12 @@ Base URL: `http://localhost/api`
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | `POST` | `/register` | Registro de nuevo usuario (cliente). |
+| `POST` | `/register-bar` | Alta de tenant en autoservicio: crea la cuenta del dueño + su bar (pendiente de aprobación). |
 | `POST` | `/login` | Inicio de sesión. Devuelve token Sanctum. |
 | `GET` | `/email/verify/{id}/{hash}` | Endpoint del enlace que llega en el correo de verificación. |
 | `POST` | `/email/resend` | Reenviar correo de verificación. |
-| `GET` | `/bares` | Listado público de bares. |
+| `GET` | `/planes` | Catálogo de planes (Free / Pro). |
+| `GET` | `/bares` | Listado de bares (activos para el público; el superadmin autenticado ve también los pendientes de aprobación). |
 | `GET` | `/bares/{bar}` | Ficha pública de un bar. |
 | `GET` | `/bares/{bar}/mesas` | Mesas activas de un bar. |
 | `GET` | `/bares/{bar}/resenas` | Reseñas públicas del bar. |
@@ -302,10 +333,10 @@ Requieren rol `bar_admin` o `superadmin`.
 | `GET` | `/bares/{barId}/stats` | Estadísticas internas del bar (Laravel). |
 | `GET` | `/bares/{barId}/reservas` | Listado de reservas del bar. |
 | `PATCH` | `/reservas/{reserva}/estado` | Confirmar / rechazar una reserva. |
-| `POST` | `/bares/{bar}/mesas` | Crear mesa. |
+| `POST` | `/bares/{bar}/mesas` | Crear mesa. Responde `402` si el bar alcanzó el límite de mesas de su plan. |
 | `PUT` | `/bares/{bar}/mesas/{mesa}` | Editar mesa. |
 | `DELETE` | `/bares/{bar}/mesas/{mesa}` | Borrar mesa. |
-| `PUT` | `/bares/{bar}` | Editar datos del bar. |
+| `PUT` | `/bares/{bar}` | Editar datos del bar. `activo` y `plan_id` solo los puede cambiar un superadmin, aunque el bar_admin use el mismo endpoint para el resto de campos. |
 
 ### Rutas exclusivas de superadmin
 
@@ -359,10 +390,12 @@ La autorización **no es cosmética**: el frontend oculta opciones, pero el midd
 
 ## Modelo de datos
 
-Cinco tablas de negocio:
+Tablas de negocio:
 
 - **`users`** — clientes, bar_admins y superadmins.
-- **`bares`** — establecimientos registrados.
+- **`bares`** — establecimientos registrados. `activo` controla si es visible/operativo (aprobación de tenant); `plan_id` su plan de suscripción.
+- **`bar_user`** — pivote N:M entre `users` y `bares`, preparado para varios admins por bar o varios bares por admin.
+- **`planes`** — catálogo Free/Pro con `max_mesas` y `acceso_estadisticas`, referenciado por `bares.plan_id`.
 - **`mesas`** — mesas físicas de cada bar, con capacidad y ubicación.
 - **`reservas`** — entidad central. Conecta usuario (o invitado), mesa y bar. Estados: `pendiente`, `confirmada`, `cancelada`, `rechazada`.
 - **`resenas`** — opiniones de los clientes.
@@ -397,8 +430,8 @@ Diagrama entidad-relación completo: consultar la memoria técnica, sección **1
 - **Caché con Redis** para las consultas de disponibilidad y las stats agregadas.
 - **PWA / aplicación móvil** sobre la misma API existente.
 - **Análisis predictivo** en el microservicio Python (pandas + scikit-learn) para sugerir horarios y predecir demanda.
-- **Pasarelas de pago** para depósitos de reserva.
-- **Modelo freemium** con planes diferenciados por establecimiento.
+- **Pasarelas de pago** para depósitos de reserva y para cobrar el plan Pro (el modelo de planes y su enforcement ya existen — falta conectar Stripe u otro proveedor).
+- **Gestión de varios bares desde una sola cuenta**, aprovechando la relación N:M `bar_user` que ya existe en el modelo de datos.
 
 ---
 
