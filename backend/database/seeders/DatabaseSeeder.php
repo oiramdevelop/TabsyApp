@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Bar;
 use App\Models\Mesa;
+use App\Models\Plan;
 use App\Models\Reserva;
 use App\Models\Resena;
 use App\Models\User;
@@ -47,7 +48,8 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'Bar La Gitana',            'direccion' => 'Avenida del Ejército, 12',  'ciudad' => 'Chipiona',               'telefono' => '956 372 400', 'horario_apertura' => '10:00', 'horario_cierre' => '23:30','imagen' => 'https://picsum.photos/seed/chipionabar/800/500', 'descripcion' => 'Bar familiar a 100 metros de la playa de Regla. Especialidad en pescaíto frito, gambas al pil-pil y cañas bien frías.'],
         ];
 
-        $bares = array_map(fn($d) => Bar::create($d), $baresData);
+        $freePlanId = Plan::where('nombre', 'free')->value('id');
+        $bares = array_map(fn($d) => Bar::create([...$d, 'plan_id' => $freePlanId]), $baresData);
 
         // ── ADMINS DE BAR ───────────────────────────────────────────────────────
 

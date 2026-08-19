@@ -37,6 +37,13 @@ class MesaController extends Controller
     {
         $this->authorize('manage', $bar);
 
+        $limite = $bar->plan?->max_mesas;
+        if ($limite !== null && $bar->mesas()->count() >= $limite) {
+            return response()->json([
+                'error' => "Has alcanzado el límite de {$limite} mesas de tu plan {$bar->plan->etiqueta}. Pásate a Pro para añadir más.",
+            ], 402);
+        }
+
         $data = $request->validate([
             'numero'    => 'required|string',
             'capacidad' => 'required|integer|min:1',

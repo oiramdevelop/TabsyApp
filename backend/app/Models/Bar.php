@@ -14,7 +14,7 @@ class Bar extends Model
     protected $fillable = [
         'nombre', 'direccion', 'ciudad', 'telefono',
         'imagen', 'descripcion', 'horario_apertura', 'horario_cierre', 'activo',
-        'google_place_id',
+        'google_place_id', 'plan_id',
     ];
 
     protected $casts = ['activo' => 'boolean'];
@@ -23,6 +23,7 @@ class Bar extends Model
     public function reservas() { return $this->hasMany(Reserva::class, 'bar_id'); }
     public function admins()   { return $this->belongsToMany(User::class, 'bar_user')->where('role', 'bar_admin'); }
     public function resenas()  { return $this->hasMany(Resena::class, 'bar_id'); }
+    public function plan()     { return $this->belongsTo(Plan::class, 'plan_id'); }
 
     public function getRatingPromedioAttribute(): ?float
     {

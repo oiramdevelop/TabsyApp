@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PerfilController;
 use App\Http\Controllers\Api\BarController;
 use App\Http\Controllers\Api\MesaController;
+use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ResenaController;
 use App\Http\Controllers\Api\ReservaController;
 use App\Http\Controllers\Api\UserController;
@@ -19,6 +20,7 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->name('verification.verify');
 Route::post('/email/resend', [AuthController::class, 'resendVerification']);
 
+Route::get('/planes',                     [PlanController::class, 'index']);
 Route::get('/bares',                      [BarController::class,  'index']);
 Route::get('/bares/{bar}',                [BarController::class,  'show']);
 Route::get('/bares/{bar}/mesas',          [MesaController::class, 'index']);

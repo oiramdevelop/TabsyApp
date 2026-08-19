@@ -10,20 +10,24 @@ use Illuminate\Support\Facades\Storage;
 
 class BarController extends Controller
 {
-    // Público: lista bares activos con rating promedio
-    public function index()
+    // Público: lista bares activos con rating promedio.
+    // El superadmin ve también los pendientes de aprobación (activo=false).
+    public function index(Request $request)
     {
-        $bares = Bar::where('activo', true)
-            ->withAvg('resenas', 'rating')
-            ->withCount('resenas')
-            ->get()
-            ->map(function ($bar) {
-                $bar->rating_promedio = $bar->resenas_avg_rating
-                    ? round((float) $bar->resenas_avg_rating, 1)
-                    : null;
-                $bar->total_resenas = $bar->resenas_count;
-                return $bar;
-            });
+        $query = Bar::query()->with('plan')->withAvg('resenas', 'rating')->withCount('resenas');
+        // Esta ruta es pública (sin auth:sanctum) — resolvemos el guard explícitamente
+        // para que un superadmin autenticado también vea los bares pendientes de aprobación.
+        if (!$request->user('sanctum')?->isSuperAdmin()) {
+            $query->where('activo', true);
+        }
+
+        $bares = $query->get()->map(function ($bar) {
+            $bar->rating_promedio = $bar->resenas_avg_rating
+                ? round((float) $bar->resenas_avg_rating, 1)
+                : null;
+            $bar->total_resenas = $bar->resenas_count;
+            return $bar;
+        });
 
         return response()->json($bares);
     }
@@ -31,7 +35,7 @@ class BarController extends Controller
     // Público: detalle de un bar con reseñas
     public function show(Bar $bar)
     {
-        $bar->load(['mesas', 'resenas.user:id,name']);
+        $bar->load(['mesas', 'resenas.user:id,name', 'plan']);
         $bar->rating_promedio = $bar->getRatingPromedioAttribute();
         return response()->json($bar);
     }
@@ -96,7 +100,14 @@ class BarController extends Controller
             'imagen_file'      => 'nullable|image|max:4096',
             'activo'           => 'sometimes|boolean',
             'google_place_id'  => 'nullable|string',
+            'plan_id'          => 'sometimes|exists:planes,id',
         ]);
+
+        // Aprobar el bar (activo) y cambiar de plan son decisiones solo del superadmin,
+        // aunque un bar_admin pueda llamar a este mismo endpoint para editar su propio bar.
+        if (!$request->user()->isSuperAdmin()) {
+            unset($data['activo'], $data['plan_id']);
+        }
 
         if ($request->hasFile('imagen_file')) {
             // Borrar imagen anterior si era un fichero local

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bar;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,6 +67,7 @@ class AuthController extends Controller
                 'descripcion'     => $data['bar_descripcion'] ?? null,
                 'google_place_id' => $data['google_place_id'] ?? null,
                 'activo'          => false, // pendiente de aprobación por el superadmin
+                'plan_id'         => Plan::where('nombre', 'free')->value('id'),
             ]);
 
             $user = User::create([
