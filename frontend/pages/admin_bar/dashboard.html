@@ -198,7 +198,7 @@
     <!-- Estadísticas del mes (Python) — solo plan Pro -->
     <div id="stats-mes-bloqueado" style="display:none;background:linear-gradient(135deg,#0f2240,#1a3a6b);border-radius:18px;padding:28px 32px;margin-bottom:24px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
       <div>
-        <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px;">Plan Pro</p>
+        <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px;">Plan Pro · 29€/mes</p>
         <h3 style="font-weight:800;font-size:1.15rem;margin-bottom:4px;">Las estadísticas del mes están disponibles en el plan Pro</h3>
         <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);">Tendencia de reservas, tasa de confirmación, hora pico y más.</p>
       </div>
@@ -715,7 +715,7 @@
     if (aviso) {
       aviso.style.display = alcanzado ? 'block' : 'none';
       if (alcanzado) {
-        aviso.textContent = `Has alcanzado el límite de ${limite} mesas de tu plan ${barActual.plan.etiqueta}. Pásate a Pro para añadir más.`;
+        aviso.textContent = `Has alcanzado el límite de ${limite} mesas de tu plan ${barActual.plan.etiqueta}. Pásate a Pro (29€/mes) para añadir más.`;
       }
     }
   }
