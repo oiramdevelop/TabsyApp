@@ -61,9 +61,10 @@
     .bar-stat-bar { height:6px; border-radius:999px; background:var(--steel); transition:width 0.6s ease; }
 
     /* Chart bars */
-    .chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:80px; justify-content:flex-end; }
-    .chart-fill { width:100%; border-radius:3px 3px 0 0; min-height:2px; transition:height 0.5s ease; }
+    .chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:80px; justify-content:flex-end; }
+    .chart-fill { width:100%; max-width:22px; margin:0 auto; border-radius:4px 4px 0 0; min-height:2px; transition:height 0.5s ease; }
     .chart-lbl { font-size:0.6rem; color:rgba(15,34,64,0.4); }
+    .chart-val { font-size:0.66rem; font-weight:700; color:rgba(15,34,64,0.62); line-height:1; font-variant-numeric:tabular-nums; }
 
     /* Modal */
     .modal-overlay { position:fixed;inset:0;z-index:2000;background:rgba(10,20,40,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px; }
@@ -682,14 +683,19 @@
       }
 
       // ── Helper: mini bar chart ───────────────────────────────
+      // Muestra el valor sobre cada barra salvo que haya demasiadas (>12):
+      // con muchas barras los números se amontonan y dejan de leerse — el
+      // tooltip (title) sigue dando el valor exacto en ese caso.
       function miniChart(containerId, rows, keyX, keyY, color, labelFn) {
         const wrap = document.getElementById(containerId);
         if (!wrap) return;
         if (!rows || rows.length === 0) { wrap.innerHTML = '<p class="text-xs text-gray-400 self-center">Sin datos</p>'; return; }
         const maxVal = Math.max(...rows.map(r => r[keyY]), 1);
+        const denso  = rows.length > 12;
         wrap.innerHTML = rows.map(r => `
           <div class="chart-col">
-            <div class="chart-fill" style="height:${Math.round(r[keyY]/maxVal*100)}%;background:${color};opacity:0.8;" title="${labelFn(r)}: ${r[keyY]}"></div>
+            ${!denso ? `<span class="chart-val">${r[keyY]}</span>` : ''}
+            <div class="chart-fill" style="height:${Math.round(r[keyY]/maxVal*100)}%;background:${color};opacity:0.85;" title="${labelFn(r)}: ${r[keyY]}"></div>
             <span class="chart-lbl">${labelFn(r)}</span>
           </div>
         `).join('');
