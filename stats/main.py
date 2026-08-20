@@ -135,22 +135,22 @@ def stats_app():
 
         # ── Crecimiento usuarios (últimos 8 meses) ───────────────
         cur.execute("""
-            SELECT DATE_FORMAT(created_at, '%%Y-%%m') AS mes, COUNT(*) AS total
+            SELECT DATE_FORMAT(created_at, '%Y-%m') AS mes, COUNT(*) AS total
             FROM users
             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 8 MONTH)
-            GROUP BY DATE_FORMAT(created_at, '%%Y-%%m')
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
             ORDER BY mes
         """)
         crecimiento_usuarios = cur.fetchall()
 
         # ── Tendencia reservas (últimos 6 meses) ─────────────────
         cur.execute("""
-            SELECT DATE_FORMAT(fecha, '%%Y-%%m') AS mes,
+            SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes,
                    COUNT(*) AS total,
                    SUM(estado='confirmada') AS confirmadas
             FROM reservas
             WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(fecha, '%%Y-%%m')
+            GROUP BY DATE_FORMAT(fecha, '%Y-%m')
             ORDER BY mes
         """)
         tendencia = cur.fetchall()
