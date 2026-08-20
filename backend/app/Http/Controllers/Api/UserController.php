@@ -12,7 +12,7 @@ class UserController extends Controller
     // SuperAdmin: listar todos los usuarios
     public function index()
     {
-        return response()->json(User::with('bar')->get());
+        return response()->json(User::with(['bar', 'bares'])->get());
     }
 
     // SuperAdmin: crear usuario (puede asignar cualquier rol)
@@ -24,16 +24,18 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
             'role'     => 'required|in:superadmin,bar_admin,cliente',
             'bar_id'   => 'nullable|exists:bares,id',
+            'bares'    => 'sometimes|array',
+            'bares.*'  => 'integer|exists:bares,id',
         ]);
 
         $user = User::create([
-            ...$data,
+            ...collect($data)->except('bares')->all(),
             'password' => Hash::make($data['password']),
         ]);
 
-        $this->sincronizarBarPivote($user);
+        $this->sincronizarBarPivote($user, $data['bares'] ?? []);
 
-        return response()->json($user->load('bar'), 201);
+        return response()->json($user->load(['bar', 'bares']), 201);
     }
 
     // SuperAdmin: editar usuario
@@ -45,16 +47,18 @@ class UserController extends Controller
             'password' => 'sometimes|string|min:8',
             'role'     => 'sometimes|in:superadmin,bar_admin,cliente',
             'bar_id'   => 'nullable|exists:bares,id',
+            'bares'    => 'sometimes|array',
+            'bares.*'  => 'integer|exists:bares,id',
         ]);
 
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
 
-        $user->update($data);
-        $this->sincronizarBarPivote($user);
+        $user->update(collect($data)->except('bares')->all());
+        $this->sincronizarBarPivote($user, $data['bares'] ?? []);
 
-        return response()->json($user->load('bar'));
+        return response()->json($user->load(['bar', 'bares']));
     }
 
     // SuperAdmin: eliminar usuario
@@ -64,13 +68,22 @@ class UserController extends Controller
         return response()->json(['message' => 'Usuario eliminado.']);
     }
 
-    // Mantiene la tabla pivote bar_user en línea con la columna users.bar_id
-    private function sincronizarBarPivote(User $user): void
+    // Mantiene la tabla pivote bar_user en línea con users.bar_id (o con la
+    // lista completa de $bares cuando el superadmin asigna varios negocios
+    // a un mismo bar_admin). bar_id queda como "bar principal" (el primero).
+    private function sincronizarBarPivote(User $user, array $bares = []): void
     {
-        if ($user->role === 'bar_admin' && $user->bar_id) {
-            $user->bares()->sync([$user->bar_id]);
-        } else {
+        if ($user->role !== 'bar_admin') {
             $user->bares()->sync([]);
+            return;
+        }
+
+        $ids = !empty($bares) ? $bares : array_filter([$user->bar_id]);
+        $user->bares()->sync($ids);
+
+        if (!empty($ids) && !in_array($user->bar_id, $ids)) {
+            $user->bar_id = $ids[0];
+            $user->save();
         }
     }
 }

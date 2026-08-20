@@ -82,6 +82,7 @@
     <span class="text-xs mt-2 block font-semibold" style="color:rgba(201,169,110,0.7);letter-spacing:0.06em;text-transform:uppercase;">Admin Bar</span>
     <span id="bar-nombre-sidebar" class="text-sm font-semibold block mt-1" style="color:white;">Cargando...</span>
     <span id="bar-plan-sidebar" style="display:none;font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:2px 9px;border-radius:999px;margin-top:6px;"></span>
+    <select id="selector-negocio" style="display:none;width:100%;margin-top:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:white;border-radius:8px;padding:7px 10px;font-size:0.8rem;font-weight:600;cursor:pointer;"></select>
   </div>
 
   <div class="sidebar-section">General</div>
@@ -401,7 +402,7 @@
   if (!auth.requireBarAdmin()) throw new Error('No autorizado');
 
   const user  = auth.getUser();
-  const barId = user.bar_id;
+  const barId = new URLSearchParams(location.search).get('bar') || user.bar_id;
 
   document.getElementById('user-info').textContent = user.name + ' · bar_admin';
   document.getElementById('btn-logout').addEventListener('click', () => auth.logout());
@@ -436,6 +437,19 @@
     planBadge.style.background = esPro ? 'rgba(201,169,110,0.2)' : 'rgba(255,255,255,0.08)';
     planBadge.style.color = esPro ? '#c9a96e' : 'rgba(255,255,255,0.5)';
     planBadge.style.display = 'inline-block';
+
+    // Selector de negocio: solo se muestra si el admin gestiona más de un bar
+    const misBares = user.bares || [];
+    if (misBares.length > 1) {
+      const sel = document.getElementById('selector-negocio');
+      sel.innerHTML = misBares.map(b =>
+        `<option value="${b.id}" ${String(b.id) === String(barId) ? 'selected' : ''}>${b.nombre}</option>`
+      ).join('');
+      sel.style.display = 'block';
+      sel.addEventListener('change', () => {
+        window.location.href = `/pages/admin_bar/dashboard.html?bar=${sel.value}`;
+      });
+    }
 
     // Stats dashboard
     document.getElementById('stat-total').textContent      = stats.total;

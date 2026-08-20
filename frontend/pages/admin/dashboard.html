@@ -332,8 +332,8 @@
             </select>
           </div>
           <div id="bar-select-wrap" class="hidden">
-            <label>Bar asignado</label>
-            <select id="user-bar" class="form-input"><option value="">Cargando bares...</option></select>
+            <label>Bares asignados <span style="opacity:0.6;font-weight:400;text-transform:none;letter-spacing:0;">· Ctrl/Cmd + clic para elegir varios</span></label>
+            <select id="user-bar" class="form-input" multiple size="4"><option value="">Cargando bares...</option></select>
           </div>
           <button type="submit" class="btn-primary mt-1">Crear usuario</button>
         </form>
@@ -438,6 +438,15 @@
         <button onclick="cambiarRolUsuario()" class="btn-primary" style="white-space:nowrap;">Cambiar rol</button>
         <button onclick="eliminarUsuario()" class="btn-danger">Eliminar</button>
       </div>
+
+      <!-- Bares asignados (selector de negocio: un bar_admin puede gestionar varios) -->
+      <div id="mu-bares-wrap" style="border-top:1px solid rgba(15,34,64,0.07);padding-top:18px;margin-top:14px;">
+        <label>Bares asignados <span style="opacity:0.6;font-weight:400;text-transform:none;letter-spacing:0;">· Ctrl/Cmd + clic para elegir varios</span></label>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <select id="mu-bares" class="form-input" multiple size="4" style="flex:1;"></select>
+          <button onclick="guardarBaresUsuario()" class="btn-primary" style="white-space:nowrap;">Guardar bares</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -519,9 +528,11 @@
       </div>
     `).join('');
 
-    // Select bares en form usuario
-    const selBar = document.getElementById('user-bar');
-    selBar.innerHTML = bares.map(b => `<option value="${b.id}">${b.nombre}</option>`).join('');
+    // Select bares en form usuario y en el modal de edición
+    window._todosBares = bares;
+    const opcionesBares = bares.map(b => `<option value="${b.id}">${b.nombre}</option>`).join('');
+    document.getElementById('user-bar').innerHTML = opcionesBares;
+    document.getElementById('mu-bares').innerHTML  = opcionesBares;
 
     // Tabla reservas
     document.getElementById('todas-reservas-table').innerHTML = reservas.map(r => `
@@ -610,6 +621,15 @@
     }
 
     document.getElementById('mu-nuevo-rol').value = u.role;
+
+    // Selector de negocio: solo tiene sentido para bar_admin
+    const baresWrap = document.getElementById('mu-bares-wrap');
+    baresWrap.style.display = u.role === 'bar_admin' ? 'block' : 'none';
+    const asignados = new Set((u.bares || []).map(b => String(b.id)));
+    document.querySelectorAll('#mu-bares option').forEach(opt => {
+      opt.selected = asignados.has(opt.value);
+    });
+
     document.getElementById('modal-usuario').style.display = 'flex';
   };
 
@@ -620,6 +640,22 @@
     try {
       await api.usuarios.update(u.id, { role: nuevoRol });
       toast('Rol actualizado', 'success');
+      cerrarModalUser();
+      loadStats();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  window.guardarBaresUsuario = async function() {
+    const u = window._usuarioActivo;
+    if (!u) return;
+    const bares = Array.from(document.getElementById('mu-bares').selectedOptions).map(o => o.value);
+    if (bares.length === 0) {
+      toast('Elige al menos un bar', 'error');
+      return;
+    }
+    try {
+      await api.usuarios.update(u.id, { bares });
+      toast('Bares actualizados', 'success');
       cerrarModalUser();
       loadStats();
     } catch (e) { toast(e.message, 'error'); }
@@ -774,6 +810,7 @@
     }
   };
 
+  window.loadStats = loadStats; // admin.js necesita poder refrescar la tabla tras crear un usuario
   loadStats();
 </script>
 

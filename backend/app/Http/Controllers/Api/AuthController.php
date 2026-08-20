@@ -121,7 +121,7 @@ class AuthController extends Controller
         $token = $user->createToken('tabsy')->plainTextToken;
 
         return response()->json([
-            'user'  => $user,
+            'user'  => $user->load('bares'),
             'token' => $token,
         ]);
     }
@@ -134,7 +134,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json($request->user()->load('bares'));
     }
 
     /**
