@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillingController;
+use App\Http\Controllers\Api\ConfigController;
 use App\Http\Controllers\Api\PerfilController;
 use App\Http\Controllers\Api\BarController;
 use App\Http\Controllers\Api\MesaController;
@@ -22,6 +23,7 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
 Route::post('/email/resend', [AuthController::class, 'resendVerification']);
 
 Route::get('/planes',                     [PlanController::class, 'index']);
+Route::get('/config/maps-key',            [ConfigController::class, 'mapsKey']);
 Route::get('/bares',                      [BarController::class,  'index']);
 Route::get('/bares/{bar}',                [BarController::class,  'show']);
 Route::get('/bares/{bar}/mesas',          [MesaController::class, 'index']);
