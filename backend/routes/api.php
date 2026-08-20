@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\PerfilController;
 use App\Http\Controllers\Api\BarController;
 use App\Http\Controllers\Api\MesaController;
@@ -57,6 +58,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/bares/{bar}/mesas/{mesa}',    [MesaController::class, 'destroy']);
 
         Route::put('/bares/{bar}', [BarController::class, 'update']);
+
+        Route::post('/bares/{bar}/checkout',             [BillingController::class, 'checkout']);
+        Route::post('/bares/{bar}/cancelar-suscripcion',  [BillingController::class, 'cancelar']);
     });
 
     // ── SOLO SUPERADMIN ───────────────────────────────────────────────────────

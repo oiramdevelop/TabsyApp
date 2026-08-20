@@ -1,7 +1,7 @@
 FROM php:8.4-fpm
 
-# Extensiones PHP necesarias
-RUN docker-php-ext-install pdo pdo_mysql
+# Extensiones PHP necesarias (bcmath: requerida por laravel/cashier)
+RUN docker-php-ext-install pdo pdo_mysql bcmath
 
 # Instalar Node.js 20 (para Tailwind CLI)
 RUN apt-get update && apt-get install -y curl unzip git && \

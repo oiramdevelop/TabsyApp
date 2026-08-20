@@ -370,6 +370,19 @@
         </form>
       </div>
 
+      <!-- Facturación -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5 lg:col-span-2">
+        <h3 class="font-bold text-lg mb-1">Plan y facturación</h3>
+        <p class="text-sm text-gray-400 mb-5">Pago real con Stripe (modo test) — tarjeta de prueba <code>4242 4242 4242 4242</code>, cualquier fecha futura y CVC.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#f8f9fc;border-radius:14px;padding:18px 20px;">
+          <div>
+            <p id="fact-plan-nombre" style="font-weight:800;font-size:1.1rem;color:var(--navy);">—</p>
+            <p id="fact-plan-detalle" class="text-sm text-gray-400"></p>
+          </div>
+          <div id="fact-acciones"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -398,11 +411,17 @@
   import { api }    from '/assets/js/core/api.js';
   import { toast }  from '/assets/js/components/toast.js';
   import { loader } from '/assets/js/components/loader.js';
+  import { modal }  from '/assets/js/components/modal.js';
 
   if (!auth.requireBarAdmin()) throw new Error('No autorizado');
 
   const user  = auth.getUser();
   const barId = new URLSearchParams(location.search).get('bar') || user.bar_id;
+
+  // Vuelta desde Stripe Checkout
+  const checkoutStatus = new URLSearchParams(location.search).get('checkout');
+  if (checkoutStatus === 'success') toast('Pago recibido. Activando el plan Pro...', 'success');
+  if (checkoutStatus === 'cancel')  toast('Pago cancelado, tu plan no ha cambiado', 'info');
 
   document.getElementById('user-info').textContent = user.name + ' · bar_admin';
   document.getElementById('btn-logout').addEventListener('click', () => auth.logout());
@@ -437,6 +456,8 @@
     planBadge.style.background = esPro ? 'rgba(201,169,110,0.2)' : 'rgba(255,255,255,0.08)';
     planBadge.style.color = esPro ? '#c9a96e' : 'rgba(255,255,255,0.5)';
     planBadge.style.display = 'inline-block';
+
+    renderFacturacion(bar);
 
     // Selector de negocio: solo se muestra si el admin gestiona más de un bar
     const misBares = user.bares || [];
@@ -840,6 +861,40 @@
   });
 
   window.previewPlaces = () => toast('Configura la API Key de Google en la ficha del bar', 'info');
+
+  // ── Facturación (Stripe Checkout real, modo test) ──────────────
+  function renderFacturacion(bar) {
+    const esPro = bar.plan?.nombre === 'pro';
+    document.getElementById('fact-plan-nombre').textContent = `Plan ${bar.plan?.etiqueta ?? 'Free'}`;
+    document.getElementById('fact-plan-detalle').textContent = esPro
+      ? '29€/mes · suscripción activa'
+      : '0€/mes · hasta 5 mesas, sin estadísticas';
+
+    const acciones = document.getElementById('fact-acciones');
+    if (esPro) {
+      acciones.innerHTML = `<button id="btn-cancelar-sub" style="white-space:nowrap;padding:10px 20px;border-radius:10px;border:none;background:#fee2e2;color:#991b1b;font-weight:600;font-size:0.88rem;cursor:pointer;">Cancelar suscripción</button>`;
+      document.getElementById('btn-cancelar-sub').addEventListener('click', async () => {
+        const ok = await modal.confirm('¿Cancelar suscripción?', 'Tu bar volverá al plan Free cuando termine el periodo ya pagado.');
+        if (!ok) return;
+        try {
+          await api.bares.cancelarSuscripcion(barId);
+          toast('Suscripción cancelada', 'info');
+        } catch (e) { toast(e.message, 'error'); }
+      });
+    } else {
+      acciones.innerHTML = `<button id="btn-actualizar-pro" class="btn-primary" style="white-space:nowrap;">Actualizar a Pro — 29€/mes</button>`;
+      document.getElementById('btn-actualizar-pro').addEventListener('click', async () => {
+        loader.show();
+        try {
+          const { url } = await api.bares.checkout(barId);
+          window.location.href = url;
+        } catch (e) {
+          toast(e.message, 'error');
+          loader.hide();
+        }
+      });
+    }
+  }
 
   init();
 </script>
