@@ -440,6 +440,23 @@
       return;
     }
 
+    try {
+      await cargarDashboard();
+    } catch (e) {
+      // Si la URL traía un ?bar=ID que ya no existe o al que ya no tienes acceso,
+      // reintentamos una vez con tu bar principal en vez de quedarnos colgados
+      // en "Cargando..." sin avisar.
+      const teniaBarEnUrl = new URLSearchParams(location.search).has('bar');
+      if (teniaBarEnUrl && user.bar_id) {
+        toast('Ese bar ya no está disponible, mostrando tu bar principal', 'info');
+        window.location.href = '/pages/admin_bar/dashboard.html';
+      } else {
+        toast('No se pudo cargar tu panel. Vuelve a iniciar sesión.', 'error');
+      }
+    }
+  }
+
+  async function cargarDashboard() {
     const [bar, stats, reservas] = await Promise.all([
       api.bares.getOne(barId),
       api.bares.stats(barId),
