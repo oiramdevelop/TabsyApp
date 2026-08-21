@@ -40,7 +40,7 @@ class MesaController extends Controller
         $limite = $bar->plan?->max_mesas;
         if ($limite !== null && $bar->mesas()->count() >= $limite) {
             return response()->json([
-                'error' => "Has alcanzado el límite de {$limite} mesas de tu plan {$bar->plan->etiqueta}. Pásate a Pro para añadir más.",
+                'error' => "Has alcanzado el límite de {$limite} mesas de tu plan {$bar->plan->etiqueta}. Pásate a Pro (29€/mes) para añadir más.",
             ], 402);
         }
 

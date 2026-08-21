@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'price_pro' => env('STRIPE_PRICE_PRO'),
+    ],
+
+    'google' => [
+        'maps_key' => env('GOOGLE_MAPS_KEY'),
+    ],
+
 ];

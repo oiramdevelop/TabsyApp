@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BillingController;
+use App\Http\Controllers\Api\ConfigController;
 use App\Http\Controllers\Api\PerfilController;
 use App\Http\Controllers\Api\BarController;
 use App\Http\Controllers\Api\MesaController;
@@ -21,6 +23,7 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
 Route::post('/email/resend', [AuthController::class, 'resendVerification']);
 
 Route::get('/planes',                     [PlanController::class, 'index']);
+Route::get('/config/maps-key',            [ConfigController::class, 'mapsKey']);
 Route::get('/bares',                      [BarController::class,  'index']);
 Route::get('/bares/{bar}',                [BarController::class,  'show']);
 Route::get('/bares/{bar}/mesas',          [MesaController::class, 'index']);
@@ -57,6 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/bares/{bar}/mesas/{mesa}',    [MesaController::class, 'destroy']);
 
         Route::put('/bares/{bar}', [BarController::class, 'update']);
+
+        Route::post('/bares/{bar}/checkout',             [BillingController::class, 'checkout']);
+        Route::post('/bares/{bar}/cancelar-suscripcion',  [BillingController::class, 'cancelar']);
     });
 
     // ── SOLO SUPERADMIN ───────────────────────────────────────────────────────

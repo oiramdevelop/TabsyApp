@@ -183,12 +183,13 @@ function renderUsuarios(usuarios) {
 
 document.getElementById('form-usuario')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const bares = Array.from(document.getElementById('user-bar')?.selectedOptions || []).map(o => o.value);
     const data = {
         name:     document.getElementById('user-name').value,
         email:    document.getElementById('user-email').value,
         password: document.getElementById('user-password').value,
         role:     document.getElementById('user-role').value,
-        bar_id:   document.getElementById('user-bar')?.value || null,
+        bares,
     };
     loader.show();
     try {
@@ -196,6 +197,7 @@ document.getElementById('form-usuario')?.addEventListener('submit', async (e) =>
         toast('Usuario creado', 'success');
         e.target.reset();
         cargarUsuarios();
+        window.loadStats?.();
     } catch (err) {
         toast(err.message, 'error');
     } finally {

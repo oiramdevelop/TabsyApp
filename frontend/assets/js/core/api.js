@@ -82,6 +82,8 @@ export const api = {
         create:  (data)    => request('POST',   '/bares',        data),
         update:  (id, data)=> request('PUT',    `/bares/${id}`,  data),
         delete:  (id)      => request('DELETE', `/bares/${id}`),
+        checkout:            (id) => request('POST', `/bares/${id}/checkout`),
+        cancelarSuscripcion:  (id) => request('POST', `/bares/${id}/cancelar-suscripcion`),
     },
 
     // ─── MESAS ───────────────────────────────────────────────────────────────

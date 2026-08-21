@@ -82,6 +82,7 @@
     <span class="text-xs mt-2 block font-semibold" style="color:rgba(201,169,110,0.7);letter-spacing:0.06em;text-transform:uppercase;">Admin Bar</span>
     <span id="bar-nombre-sidebar" class="text-sm font-semibold block mt-1" style="color:white;">Cargando...</span>
     <span id="bar-plan-sidebar" style="display:none;font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:2px 9px;border-radius:999px;margin-top:6px;"></span>
+    <select id="selector-negocio" style="display:none;width:100%;margin-top:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:white;border-radius:8px;padding:7px 10px;font-size:0.8rem;font-weight:600;cursor:pointer;"></select>
   </div>
 
   <div class="sidebar-section">General</div>
@@ -197,7 +198,7 @@
     <!-- Estadísticas del mes (Python) — solo plan Pro -->
     <div id="stats-mes-bloqueado" style="display:none;background:linear-gradient(135deg,#0f2240,#1a3a6b);border-radius:18px;padding:28px 32px;margin-bottom:24px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
       <div>
-        <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px;">Plan Pro</p>
+        <p style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px;">Plan Pro · 29€/mes</p>
         <h3 style="font-weight:800;font-size:1.15rem;margin-bottom:4px;">Las estadísticas del mes están disponibles en el plan Pro</h3>
         <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);">Tendencia de reservas, tasa de confirmación, hora pico y más.</p>
       </div>
@@ -369,6 +370,18 @@
         </form>
       </div>
 
+      <!-- Facturación -->
+      <div class="bg-white rounded-2xl p-6 border border-black/5 lg:col-span-2">
+        <h3 class="font-bold text-lg mb-1">Plan y facturación</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#f8f9fc;border-radius:14px;padding:18px 20px;">
+          <div>
+            <p id="fact-plan-nombre" style="font-weight:800;font-size:1.1rem;color:var(--navy);">—</p>
+            <p id="fact-plan-detalle" class="text-sm text-gray-400"></p>
+          </div>
+          <div id="fact-acciones"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -397,11 +410,17 @@
   import { api }    from '/assets/js/core/api.js';
   import { toast }  from '/assets/js/components/toast.js';
   import { loader } from '/assets/js/components/loader.js';
+  import { modal }  from '/assets/js/components/modal.js';
 
   if (!auth.requireBarAdmin()) throw new Error('No autorizado');
 
   const user  = auth.getUser();
-  const barId = user.bar_id;
+  const barId = new URLSearchParams(location.search).get('bar') || user.bar_id;
+
+  // Vuelta desde Stripe Checkout
+  const checkoutStatus = new URLSearchParams(location.search).get('checkout');
+  if (checkoutStatus === 'success') toast('Pago recibido. Activando el plan Pro...', 'success');
+  if (checkoutStatus === 'cancel')  toast('Pago cancelado, tu plan no ha cambiado', 'info');
 
   document.getElementById('user-info').textContent = user.name + ' · bar_admin';
   document.getElementById('btn-logout').addEventListener('click', () => auth.logout());
@@ -420,6 +439,23 @@
       return;
     }
 
+    try {
+      await cargarDashboard();
+    } catch (e) {
+      // Si la URL traía un ?bar=ID que ya no existe o al que ya no tienes acceso,
+      // reintentamos una vez con tu bar principal en vez de quedarnos colgados
+      // en "Cargando..." sin avisar.
+      const teniaBarEnUrl = new URLSearchParams(location.search).has('bar');
+      if (teniaBarEnUrl && user.bar_id) {
+        toast('Ese bar ya no está disponible, mostrando tu bar principal', 'info');
+        window.location.href = '/pages/admin_bar/dashboard.html';
+      } else {
+        toast('No se pudo cargar tu panel. Vuelve a iniciar sesión.', 'error');
+      }
+    }
+  }
+
+  async function cargarDashboard() {
     const [bar, stats, reservas] = await Promise.all([
       api.bares.getOne(barId),
       api.bares.stats(barId),
@@ -436,6 +472,21 @@
     planBadge.style.background = esPro ? 'rgba(201,169,110,0.2)' : 'rgba(255,255,255,0.08)';
     planBadge.style.color = esPro ? '#c9a96e' : 'rgba(255,255,255,0.5)';
     planBadge.style.display = 'inline-block';
+
+    renderFacturacion(bar);
+
+    // Selector de negocio: solo se muestra si el admin gestiona más de un bar
+    const misBares = user.bares || [];
+    if (misBares.length > 1) {
+      const sel = document.getElementById('selector-negocio');
+      sel.innerHTML = misBares.map(b =>
+        `<option value="${b.id}" style="color:#0f2240;background:white;" ${String(b.id) === String(barId) ? 'selected' : ''}>${b.nombre}</option>`
+      ).join('');
+      sel.style.display = 'block';
+      sel.addEventListener('change', () => {
+        window.location.href = `/pages/admin_bar/dashboard.html?bar=${sel.value}`;
+      });
+    }
 
     // Stats dashboard
     document.getElementById('stat-total').textContent      = stats.total;
@@ -701,7 +752,7 @@
     if (aviso) {
       aviso.style.display = alcanzado ? 'block' : 'none';
       if (alcanzado) {
-        aviso.textContent = `Has alcanzado el límite de ${limite} mesas de tu plan ${barActual.plan.etiqueta}. Pásate a Pro para añadir más.`;
+        aviso.textContent = `Has alcanzado el límite de ${limite} mesas de tu plan ${barActual.plan.etiqueta}. Pásate a Pro (29€/mes) para añadir más.`;
       }
     }
   }
@@ -826,6 +877,40 @@
   });
 
   window.previewPlaces = () => toast('Configura la API Key de Google en la ficha del bar', 'info');
+
+  // ── Facturación (Stripe Checkout real, modo test) ──────────────
+  function renderFacturacion(bar) {
+    const esPro = bar.plan?.nombre === 'pro';
+    document.getElementById('fact-plan-nombre').textContent = `Plan ${bar.plan?.etiqueta ?? 'Free'}`;
+    document.getElementById('fact-plan-detalle').textContent = esPro
+      ? '29€/mes · suscripción activa'
+      : '0€/mes · hasta 5 mesas, sin estadísticas';
+
+    const acciones = document.getElementById('fact-acciones');
+    if (esPro) {
+      acciones.innerHTML = `<button id="btn-cancelar-sub" style="white-space:nowrap;padding:10px 20px;border-radius:10px;border:none;background:#fee2e2;color:#991b1b;font-weight:600;font-size:0.88rem;cursor:pointer;">Cancelar suscripción</button>`;
+      document.getElementById('btn-cancelar-sub').addEventListener('click', async () => {
+        const ok = await modal.confirm('¿Cancelar suscripción?', 'Tu bar volverá al plan Free cuando termine el periodo ya pagado.');
+        if (!ok) return;
+        try {
+          await api.bares.cancelarSuscripcion(barId);
+          toast('Suscripción cancelada', 'info');
+        } catch (e) { toast(e.message, 'error'); }
+      });
+    } else {
+      acciones.innerHTML = `<button id="btn-actualizar-pro" class="btn-primary" style="white-space:nowrap;">Actualizar a Pro — 29€/mes</button>`;
+      document.getElementById('btn-actualizar-pro').addEventListener('click', async () => {
+        loader.show();
+        try {
+          const { url } = await api.bares.checkout(barId);
+          window.location.href = url;
+        } catch (e) {
+          toast(e.message, 'error');
+          loader.hide();
+        }
+      });
+    }
+  }
 
   init();
 </script>

@@ -88,7 +88,7 @@
 <body>
 
 <!-- Left panel decorativo -->
-<div class="left-panel hidden lg:flex flex-col justify-between w-1/2 p-16 text-white relative z-10">
+<div class="left-panel hidden lg:flex flex-col justify-between w-1/2 p-16 text-white relative z-10 sticky top-0 h-screen">
   <a href="/" class="flex items-center">
     <img src="/assets/images/logo2-2.png" alt="Tabsy" style="height:90px;width:auto;" />
   </a>
@@ -215,7 +215,21 @@
     <!-- ── REGISTRA TU BAR ── -->
     <div id="section-bar" class="hidden">
       <h2 class="text-2xl font-bold mb-1" style="color:var(--navy);">Registra tu bar</h2>
-      <p class="text-sm mb-8" style="color:rgba(15,34,64,0.45);">Crea tu cuenta y da de alta tu bar en Tabsy. Un momento y ya estás dentro.</p>
+      <p class="text-sm mb-5" style="color:rgba(15,34,64,0.45);">Crea tu cuenta y da de alta tu bar en Tabsy. Un momento y ya estás dentro.</p>
+
+      <div class="grid grid-cols-2 gap-3 mb-8">
+        <div style="border:1.5px solid rgba(15,34,64,0.12);border-radius:14px;padding:14px 16px;">
+          <p style="font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(15,34,64,0.45);margin-bottom:4px;">Free</p>
+          <p style="font-weight:800;color:var(--navy);margin-bottom:4px;">0€<span style="font-weight:500;font-size:0.75rem;color:rgba(15,34,64,0.4);"> /mes</span></p>
+          <p style="font-size:0.76rem;color:rgba(15,34,64,0.5);">Hasta 5 mesas</p>
+        </div>
+        <div style="border:1.5px solid var(--sand);border-radius:14px;padding:14px 16px;background:rgba(201,169,110,0.06);">
+          <p style="font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--sand);margin-bottom:4px;">Pro</p>
+          <p style="font-weight:800;color:var(--navy);margin-bottom:4px;">29€<span style="font-weight:500;font-size:0.75rem;color:rgba(15,34,64,0.4);"> /mes</span></p>
+          <p style="font-size:0.76rem;color:rgba(15,34,64,0.5);">Mesas ilimitadas + estadísticas</p>
+        </div>
+      </div>
+      <p class="text-xs mb-6" style="color:rgba(15,34,64,0.4);">Empiezas en el plan Free. Puedes pasarte a Pro más adelante.</p>
 
       <form id="form-registro-bar" class="flex flex-col gap-5">
         <p style="font-size:0.72rem;font-weight:700;color:var(--sand);letter-spacing:0.08em;text-transform:uppercase;">Tus datos</p>
@@ -299,14 +313,14 @@
 
 <!-- Google Places: autocompletar nombre del bar en "Registra tu bar" -->
 <script>
-  const MAPS_KEY = 'AIzaSyAJ446VxneqgPIzM0aSAEhTGZlU7_6MU8w';
   let _placesRegistroLoaded = false;
 
-  function cargarGooglePlacesRegistro() {
+  async function cargarGooglePlacesRegistro() {
     if (_placesRegistroLoaded) return;
     _placesRegistroLoaded = true;
+    const { key } = await fetch('/api/config/maps-key').then(r => r.json());
     const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places&callback=initRegistroPlaces&language=es&region=es`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initRegistroPlaces&language=es&region=es`;
     s.async = true; s.defer = true;
     document.head.appendChild(s);
   }
